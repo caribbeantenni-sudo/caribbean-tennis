@@ -1,0 +1,13 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+
+/seed.json
+  Cache-Control: no-cache
+/app.js
+  Cache-Control: no-cache
+/db.js
+  Cache-Control: no-cache
+/style.css
+  Cache-Control: no-cache
