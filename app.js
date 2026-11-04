@@ -51,7 +51,7 @@ function allMatches(E){var out=[];
   return out}
 /* ---------- 3ra edición e inscripciones ---------- */
 var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:112000,cats:[['3ra','3ra categoría',800000],['4ta','4ta categoría',400000]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
-var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{insSent=JSON.parse(localStorage.getItem('ct_ins')||'null')}catch(e){}
+var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{localStorage.removeItem('ct_ins');insSent=JSON.parse(sessionStorage.getItem('ct_ins')||'null')}catch(e){}
 function daysTo(d){if(!TODAY)return null;var a=TODAY.split('-'),b=d.split('-');return Math.round((Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/864e5)}
 function money(n){return '$'+n.toLocaleString('es-CO')}
 /* reemplazos: el jugador nuevo toma el cupo y hereda el resultado del 25 oct; ese partido cuenta en el Elo del jugador original */
@@ -249,7 +249,7 @@ function render(){
   if(dleft!=null&&dleft>0)h+='<div class="countdown"><b>'+dleft+'</b><span>'+(dleft===1?'día':'días')+' para el torneo</span></div>';
   h+='<div class="nfacts"><div><span>Fecha</span><strong>'+NEXT.dateTxt.replace(' de 2026','')+'</strong></div><div><span>Sede</span><strong>'+NEXT.place+'</strong></div><div><span>Inscripción</span><strong>'+money(NEXT.precio)+'</strong></div><div><span>Cupos</span><strong>'+cupo+' por categoría</strong></div></div>';
   h+='<div class="prizes">'+NEXT.cats.map(function(c){return '<div><span>Premio '+c[1]+'</span><b>'+money(c[2])+'</b></div>'}).join('')+'</div>';
-  h+='<div class="nacts">'+(canIns&&!insSent?'<button type="button" class="btn wa" id="openIns" aria-expanded="'+showForm+'">'+(showForm?'Cerrar formulario':'Inscribirme')+'</button>':'')+'<a class="btn ghost" href="'+NEXT.maps+'" target="_blank" rel="noopener">Cómo llegar</a></div></div>';
+  h+='<div class="nacts">'+(canIns?'<button type="button" class="btn wa" id="openIns" aria-expanded="'+showForm+'">'+(insSent?'Inscribir a otra persona':showForm?'Cerrar formulario':'Inscribirme')+'</button>':'')+'<a class="btn ghost" href="'+NEXT.maps+'" target="_blank" rel="noopener">Cómo llegar</a></div></div>';
   h+='<div id="inscripcion"'+(showForm?' class="open"':' hidden')+'>';
   if(!canIns)h+='<div class="insform"><h3 class="rhead">Inscripciones cerradas</h3><p class="sub" style="margin:0">'+(allFull?'Se llenaron los cupos de las dos categorías.':'Las inscripciones no están abiertas en este momento.')+'</p></div>';
   else if(insSent){var fn=esc(String(insSent.n).split(' ')[0]),paid=!!insSent.paid,canPay=!!(insSent.ref&&C.wompiPublicKey);
@@ -531,7 +531,7 @@ function keepRender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 function typing(){var f=document.getElementById('insF');if(!f)return false;return [].some.call(f.elements,function(e){return (e.type==='checkbox'||e.type==='radio')?e.checked:!!e.value})}
 /* ---------- pago en línea (Wompi) ---------- */
 function newRef(){var a=new Uint8Array(10);crypto.getRandomValues(a);return 'CT'+C.edicionActual+'-'+Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2)}).join('')}
-function saveSent(){try{localStorage.setItem('ct_ins',JSON.stringify(insSent))}catch(e){}}
+function saveSent(){try{sessionStorage.setItem('ct_ins',JSON.stringify(insSent))}catch(e){}}
 function metodoTxt(m){return {CARD:'Tarjeta',NEQUI:'Nequi',PSE:'PSE',BANCOLOMBIA_TRANSFER:'Bancolombia',BANCOLOMBIA_QR:'QR Bancolombia',BANCOLOMBIA_COLLECT:'Bancolombia',DAVIPLATA:'Daviplata'}[m]||m}
 function estadoTxt(e){return {DECLINED:'Pago rechazado',ERROR:'Error en el pago',VOIDED:'Pago anulado',PENDING:'Pago en proceso',MONTO_INCORRECTO:'Pagó un valor distinto'}[e]||e}
 function loadWompi(){return new Promise(function(res,rej){if(window.WidgetCheckout)return res();var x=document.createElement('script');x.src='https://checkout.wompi.co/widget.js';x.onload=function(){res()};x.onerror=function(){rej(new Error('widget'))};document.head.appendChild(x)})}
@@ -601,7 +601,7 @@ function applyTab(){
 function setTab(t,scroll){tab=t;LS.set('ct_tab',t);applyTab();if(scroll){var n=root.querySelector('.tabs');if(n&&window.scrollY>n.offsetTop)window.scrollTo(0,n.offsetTop)}}
 function bind(){
   applyTab();
-  var oi=document.getElementById('openIns');if(oi)oi.onclick=function(){INSOPEN=!INSOPEN;keepRender();if(INSOPEN){var f=document.getElementById('inscripcion');if(f){f.scrollIntoView({block:'start',behavior:smooth()});var n=f.querySelector('input[name=nombre]');if(n)setTimeout(function(){n.focus({preventScroll:true})},350)}}};
+  var oi=document.getElementById('openIns');if(oi)oi.onclick=function(){if(insSent){insSent=null;try{sessionStorage.removeItem('ct_ins')}catch(e){}INSOPEN=true}else INSOPEN=!INSOPEN;keepRender();if(INSOPEN){var f=document.getElementById('inscripcion');if(f){f.scrollIntoView({block:'start',behavior:smooth()});var n=f.querySelector('input[name=nombre]');if(n)setTimeout(function(){n.focus({preventScroll:true})},350)}}};
   root.querySelectorAll('[data-more]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-more');OPEN[k]=!OPEN[k];var w=b.previousElementSibling;if(w&&w.classList.contains('clip'))w.classList.toggle('open',!!OPEN[k]);var y=b.getBoundingClientRect().top;keepRender();if(!OPEN[k]){var s=b.closest('section');if(s)s.scrollIntoView({block:'start'})}}});
   root.querySelectorAll('details[data-acc]').forEach(function(d){d.addEventListener('toggle',function(){OPEN[d.getAttribute('data-acc')]=d.open})});
   var rq=document.getElementById('rkq');if(rq){rq.oninput=function(){RKQ=rq.value;applyRk()};applyRk()}
@@ -632,7 +632,7 @@ function bind(){
       if(/inscripciones_cerradas/.test(t))return bad('Las inscripciones están cerradas.');
       bad('No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.')})};
   var pb=document.getElementById('payBtn');if(pb)pb.onclick=pagar;
-  var ia=document.getElementById('insAgain');if(ia)ia.onclick=function(){insSent=null;try{localStorage.removeItem('ct_ins')}catch(e){}keepRender()};
+  var ia=document.getElementById('insAgain');if(ia)ia.onclick=function(){insSent=null;INSOPEN=true;try{sessionStorage.removeItem('ct_ins')}catch(e){}keepRender()};
   root.querySelectorAll('[data-insf]').forEach(function(b){b.onclick=function(){insFilter=b.getAttribute('data-insf');keepRender()}});
   root.querySelectorAll('[data-pay]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-pay'),r=INSROWS.filter(function(x){return x.id===id})[0];if(!r)return;b.disabled=true;
     DB.setPagado(id,!r.pagado).then(function(){r.pagado=!r.pagado;keepRender();toast(r.pagado?'Pago confirmado: '+r.nombre:'Pago quitado: '+r.nombre,2500)}).catch(function(){b.disabled=false;toast('No se pudo guardar el pago.',5000)})}});
