@@ -50,7 +50,7 @@ function allMatches(E){var out=[];
   L2.forEach(function(id){var r=ST.r[id];if(!r||r.wo)return;var pp=players(id);if(!pp[0]||!pp[1])return;var md=E.md[id];out.push({ed:2,lab:labelOf(id)+' · 2da Edición',a:eloName(pp[0],id),b:eloName(pp[1],id),sa:r.a,sb:r.b,ea:md?md.ea:null,id:id})});
   return out}
 /* ---------- 3ra edición e inscripciones ---------- */
-var NEXT={n:'3ra Edición',date:'2026-12-12',dateTxt:'Sábado 12 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:112000,cats:[['3ra','3ra categoría',800000],['4ta','4ta categoría',400000]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
+var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:112000,cats:[['3ra','3ra categoría',800000],['4ta','4ta categoría',400000]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
 var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{insSent=JSON.parse(localStorage.getItem('ct_ins')||'null')}catch(e){}
 function daysTo(d){if(!TODAY)return null;var a=TODAY.split('-'),b=d.split('-');return Math.round((Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/864e5)}
 function money(n){return '$'+n.toLocaleString('es-CO')}
