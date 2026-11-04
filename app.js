@@ -278,18 +278,6 @@ function render(){
   var F1=P1D.r.filter(function(m){return m[1]==='F'})[0], ch1=F1[4]>F1[5]?F1[2]:F1[3], sb1=ch1===F1[2]?F1[3]:F1[2], sf1=P1D.r.filter(function(m){return m[1]==='S'}).map(function(m){return m[4]>m[5]?m[3]:m[2]});
   var sco=function(a,b){return Math.max(a,b)+'-'+Math.min(a,b)};
   var ndt=NEXT.date.split('-'), nshort=(+ndt[2])+' dic';
-  h+='<section id="paradas" class="rv"><div><h2>El circuito</h2><p class="sub">Toca una edición para ver todos sus resultados.</p></div><ol class="tl">';
-  h+='<li class="done"><time>26 ago</time><div class="tlc"><small>Lanzamiento</small><b>Nace Caribbean Tennis</b><span>Arranca el Circuito Amateur en Barranquilla.</span></div></li>';
-  h+='<li class="done"><time>20 sep</time><button type="button" class="tlc go" data-go="p1"><small>1ra Edición · Parque de Raquetas</small><b>'+esc(ch1)+'</b><span>Campeón · ganó la final '+sco(F1[4],F1[5])+' a '+esc(sb1)+' · 32 jugadores</span><span class="go">Ver resultados →</span></button></li>';
-  h+='<li class="done"><time>1 nov</time><button type="button" class="tlc go" data-go="inicio"><small>2da Edición · Sunset Tennis House</small><b>'+(champ?esc(champ):'Por definir')+'</b><span>'+(champ?'Campeón · ganó la final '+sco(ST.r.F.a,ST.r.F.b)+' a '+esc(loser('F')):'Eliminatoria en juego')+' · 44 jugadores</span><span class="go">Ver resultados →</span></button></li>';
-  h+='<li class="next"><time>'+nshort+'</time><button type="button" class="tlc go" data-go="circuito" data-top="1"><small>'+NEXT.n+' · '+NEXT.place+'</small><b>Por jugarse</b><span>3ra y 4ta categoría · Inscripción '+money(NEXT.precio)+'</span><span class="go">Inscribirme →</span></button></li>';
-  h+='</ol></section>';
-
-  /* top 3 del ranking (inicio) */
-  var t3=CL.slice(0,3);
-  h+='<section id="top3" class="rv"><div class="shead"><h2>Los mejores del circuito</h2><button type="button" class="linkbtn" data-go="ranking">Ver ranking completo →</button></div><div class="podium3">'+
-    t3.map(function(p,i){return '<button type="button" class="p3 p3-'+(i+1)+'" data-p="'+esc(p)+'"><span class="medal">'+(i+1)+'</span><b>'+esc(p)+'</b><span>Elo '+f2(cElo(E,p))+'</span></button>'}).join('')+'</div></section>';
-
   /* ---------- 1ra edición ---------- */
   h+='<section id="p1res"><div><h2>1ra Edición</h2><p class="sub">Domingo 20 de septiembre de 2026 · Parque de Raquetas · 32 jugadores. Toca un nombre para ver su ficha.</p><details class="howto"><summary>¿Cómo fue el formato?</summary><p>Cada jugador jugó 2 partidos de 21 puntos en total y los 8 mejores pasaron a cuartos de final. Desde cuartos ganaba el primero en llegar a 11, y la final fue a 21.</p></details></div><div class="podium">';
   h+='<div class="pod gold"><img class="podlogo" src="'+FX.logo+'" alt="" width="56" height="56"><small>Campeón</small><b>'+nm1(ch1)+'</b><span>'+sco(F1[4],F1[5])+' en la final</span></div><div class="pod"><small>Subcampeón</small><b>'+nm1(sb1)+'</b></div><div class="pod"><small>Semifinalistas</small><b>'+sf1.map(nm1).join('<br>')+'</b></div></div></section>';
