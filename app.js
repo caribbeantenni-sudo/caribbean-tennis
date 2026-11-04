@@ -734,6 +734,7 @@ function save(prev,msg,prevFX){
 render();
 var sy=SS.get('ct2_scroll'), sm=SS.get('ct2_msg');
 if(sy){SS.del('ct2_scroll');window.scrollTo(0,+sy)} if(sm){SS.del('ct2_msg');toast(sm,2500)}
+window.__applyST=function(st){if(!st||JSON.stringify(st)===JSON.stringify(ST))return;ST=st;if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={};if(!typing()&&!document.querySelector('.modal'))keepRender()};
 setInterval(function(){var ae=document.activeElement;if(document.querySelector('.modal')||busy||draftHere||(ae&&(ae.tagName==='INPUT'||ae.tagName==='SELECT'))||typing())return;
   DB.loadKV(['st']).then(function(kv){if(kv.st&&JSON.stringify(kv.st)!==JSON.stringify(ST)){ST=kv.st;if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={}}keepRender()})},60000);
 loadPublic();

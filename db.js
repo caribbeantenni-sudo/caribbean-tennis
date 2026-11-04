@@ -85,17 +85,47 @@
     }
   };
 
-  /* ---------- arranque: datos de Supabase o, si aún no existen, los iniciales ---------- */
-  window.DB.loadKV(['fx', 'st']).then(function (kv) {
-    if (kv.fx && kv.st) return { fx: kv.fx, st: kv.st, seeded: true };
-    return fetch('seed.json').then(function (r) { return r.json(); }).then(function (s) {
-      return { fx: kv.fx || s.fx, st: kv.st || s.st, seeded: false };
-    });
-  }).then(function (d) {
-    window.__FX = d.fx; window.__ST = d.st; window.__SEEDED = d.seeded;
+  /* ---------- arranque rápido ----------
+     1) Si este navegador ya visitó la página, se muestra al instante con la última copia guardada
+        y por detrás se trae lo nuevo de Supabase.
+     2) Si es la primera visita, se espera a Supabase máximo 2,5 s; si tarda más, se muestra
+        con los datos iniciales (seed.json) y se actualiza apenas llegue Supabase. */
+  var CK = 'ct_kv_v1', started = false;
+  function readCache() { try { var x = JSON.parse(localStorage.getItem(CK) || 'null'); return x && x.fx && x.st ? x : null; } catch (e) { return null; } }
+  function writeCache(d) { try { localStorage.setItem(CK, JSON.stringify({ fx: d.fx, st: d.st })); } catch (e) {} }
+  function start(d) {
+    if (started) return; started = true;
+    window.__FX = JSON.parse(JSON.stringify(d.fx)); window.__ST = JSON.parse(JSON.stringify(d.st)); window.__SEEDED = d.seeded;
     window.__FX.logo = 'logo.webp';
+    window.__BOOTFX = JSON.stringify(d.fx);
     window.startApp();
-  }).catch(function (e) {
-    document.getElementById('root').innerHTML = '<p style="padding:24px;font-family:sans-serif">No se pudo cargar la página. Revisa tu conexión y recarga.</p>';
+  }
+  function fresh(d) {
+    if (!started) return start(d);
+    if (JSON.stringify(d.fx) !== window.__BOOTFX) {
+      /* cambió la estructura del torneo: se recarga una sola vez con los datos nuevos */
+      try { if (!sessionStorage.getItem('ct_rl')) { sessionStorage.setItem('ct_rl', '1'); location.reload(); return; } } catch (e) {}
+    }
+    if (window.__applyST) window.__applyST(d.st);
+  }
+  var seedP = null;
+  function seed() { return seedP || (seedP = fetch('seed.json').then(function (r) { return r.json(); })); }
+  var cached = readCache();
+  if (cached) start({ fx: cached.fx, st: cached.st, seeded: true });
+
+  var remote = window.DB.loadKV(['fx', 'st']).then(function (kv) {
+    if (kv.fx && kv.st) return { fx: kv.fx, st: kv.st, seeded: true };
+    return seed().then(function (s) { return { fx: kv.fx || s.fx, st: kv.st || s.st, seeded: !!(kv.fx && kv.st) }; });
   });
+  remote.then(function (d) { if (d.seeded) writeCache(d); fresh(d); }).catch(function () {});
+
+  if (!cached) {
+    seed();
+    setTimeout(function () {
+      if (started) return;
+      seed().then(function (s) { start({ fx: s.fx, st: s.st, seeded: false }); }).catch(function () {
+        document.getElementById('root').innerHTML = '<p style="padding:24px;font-family:sans-serif">No se pudo cargar la página. Revisa tu conexión y recarga.</p>';
+      });
+    }, 2500);
+  }
 })();
