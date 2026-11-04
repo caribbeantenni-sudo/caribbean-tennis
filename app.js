@@ -63,11 +63,12 @@ var root=document.getElementById('root');
 var LS={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 var SS={get:function(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},del:function(k){try{sessionStorage.removeItem(k)}catch(e){}}};
 var me=LS.get('ct2_me'); if(me&&!ELO.hasOwnProperty(me))me=null;
-var TABS=[['circuito','Circuito'],['p1','1ra Edición'],['inicio','2da Edición']];
+var TABS=[['circuito','Inicio'],['ranking','Ranking'],['p1','1ra Edición'],['inicio','2da Edición']];
 var SUB=[['inicio','Resumen'],['liga','Liga'],['tabla','Tabla y cuadro'],['info','Info']];
-var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'circuito',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
+var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
 var TODAY=(function(){try{var o={};new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value});return o.year+'-'+o.month+'-'+o.day}catch(e){return ''}})();
-var tab=LS.get('ct_tab'); if(['circuito','p1','inicio','liga','tabla','info'].indexOf(tab)<0)tab='circuito';
+var tab=LS.get('ct_tab'); if(['circuito','ranking','p1','inicio','liga','tabla','info'].indexOf(tab)<0)tab='circuito';
+var OPEN={}, INSOPEN=false, RKQ='', RKN=20, FIRST=true;
 var showAllPend=false, canOrg=false, orgOn=LS.get('ct2_org')==='1', art=null, busy=false, draftHere=null;
 
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -234,8 +235,8 @@ function render(){
   h+='<header><svg class="lines" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="3"><rect x="560" y="40" width="400" height="320"/><line x1="560" y1="80" x2="960" y2="80"/><line x1="560" y1="320" x2="960" y2="320"/><line x1="760" y1="40" x2="760" y2="360" stroke-dasharray="6 8"/><line x1="660" y1="80" x2="660" y2="320"/><line x1="860" y1="80" x2="860" y2="320"/><line x1="660" y1="200" x2="860" y2="200"/></g></svg>';
   var CL=circList(E), pts=0;P1D.r.forEach(function(m){if(!wo1(m))pts+=m[4]+m[5]});Object.keys(ST.r).forEach(function(id){var r=ST.r[id];if(!r.wo)pts+=r.a+r.b});
   h+='<div class="wrap"><div class="brand"><img class="logo" src="'+FX.logo+'" alt="Caribbean Tennis" width="84" height="84"><div class="eyebrow">Circuito Amateur · Barranquilla</div></div><h1>Caribbean<br><span>Tennis</span></h1>';
-  h+='<div class="meta"><span>1ra Edición · 20 de septiembre de 2026 · Parque de Raquetas</span><span>2da Edición · 1 de noviembre de 2026 · Sunset Tennis House</span></div>';
-  h+='<div class="stats"><div class="stat"><b>2</b><small>Ediciones</small></div><div class="stat"><b>'+CL.length+'</b><small>Jugadores</small></div><div class="stat"><b>'+(P1D.r.length+Object.keys(ST.r).length)+'</b><small>Partidos</small></div><div class="stat"><b>'+pts.toLocaleString('es-CO')+'</b><small>Puntos jugados</small></div></div></div></header>';
+  h+='<p class="tagline">Torneos de tenis amateur en Barranquilla. Juega, suma Elo y sube en el ranking del circuito.</p>';
+  h+='<div class="stats"><div class="stat"><b data-count="2">2</b><small>Ediciones</small></div><div class="stat"><b data-count="'+CL.length+'">'+CL.length+'</b><small>Jugadores</small></div><div class="stat"><b data-count="'+(P1D.r.length+Object.keys(ST.r).length)+'">'+(P1D.r.length+Object.keys(ST.r).length)+'</b><small>Partidos</small></div><div class="stat"><b data-count="'+pts+'">'+pts.toLocaleString('es-CO')+'</b><small>Puntos jugados</small></div></div></div></header>';
   var topT=['inicio','liga','tabla','info'].indexOf(tab)>=0?'inicio':tab;
   h+='<nav class="tabs" aria-label="Secciones"><div class="wrap main" role="tablist">'+TABS.map(function(t){return '<button type="button" role="tab" data-tab="'+t[0]+'" aria-selected="'+(t[0]===topT)+'">'+t[1]+'</button>'}).join('')+'</div><div class="wrap subtabs"'+(topT==='inicio'?'':' hidden')+'>'+SUB.map(function(t){return '<button type="button" data-tab="'+t[0]+'" aria-selected="'+(t[0]===tab)+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
   h+='<main><div class="wrap">';
@@ -243,11 +244,13 @@ function render(){
   /* ---------- próxima edición e inscripción ---------- */
   var cfgOpen=!INSCFG||INSCFG.abiertas!==false, cupo=(INSCFG&&INSCFG.cupo)||48, dleft=daysTo(NEXT.date);
   var allFull=NEXT.cats.every(function(c){return LLENAS[c[0]]}), canIns=cfgOpen&&!allFull;
-  h+='<section id="proxima"><div class="nexted"><div class="ey">Próxima · Inscripciones '+(!cfgOpen?'cerradas':allFull?'cerradas: cupos llenos':'abiertas')+' · '+cupo+' cupos por categoría</div><div class="big">'+NEXT.n+'</div>';
-  h+='<div class="nfacts"><div><span>Fecha</span><strong>'+NEXT.dateTxt+'</strong></div><div><span>Sede</span><strong>'+NEXT.place+', '+NEXT.city+'</strong></div><div><span>Inscripción</span><strong>'+money(NEXT.precio)+'<small style="display:block;font-size:12px;font-weight:500;opacity:.8">$110.000 + $2.000 de comisión del pago en línea</small></strong></div>'+(dleft!=null&&dleft>0?'<div><span>Faltan</span><strong>'+dleft+(dleft===1?' día':' días')+'</strong></div>':'')+'</div>';
-  h+='<div class="nfacts">'+NEXT.cats.map(function(c){return '<div><span>Premio '+c[1]+'</span><strong>'+money(c[2])+'</strong></div>'}).join('')+'</div>';
-  h+='<div class="nacts">'+(canIns?'<a class="btn wa" href="#inscripcion">Inscribirme</a>':'')+'<a class="btn ghost" href="'+NEXT.maps+'" target="_blank" rel="noopener">Cómo llegar</a></div></div>';
-  h+='<div id="inscripcion">';
+  var showForm=INSOPEN||!!insSent||!canIns;
+  h+='<section id="proxima"><div class="nexted"><div class="ey"><span class="dot'+(canIns?' on':'')+'"></span>Próxima edición · Inscripciones '+(!cfgOpen?'cerradas':allFull?'cerradas: cupos llenos':'abiertas')+'</div><div class="big">'+NEXT.n+'</div>';
+  if(dleft!=null&&dleft>0)h+='<div class="countdown"><b>'+dleft+'</b><span>'+(dleft===1?'día':'días')+' para el torneo</span></div>';
+  h+='<div class="nfacts"><div><span>Fecha</span><strong>'+NEXT.dateTxt.replace(' de 2026','')+'</strong></div><div><span>Sede</span><strong>'+NEXT.place+'</strong></div><div><span>Inscripción</span><strong>'+money(NEXT.precio)+'</strong></div><div><span>Cupos</span><strong>'+cupo+' por categoría</strong></div></div>';
+  h+='<div class="prizes">'+NEXT.cats.map(function(c){return '<div><span>Premio '+c[1]+'</span><b>'+money(c[2])+'</b></div>'}).join('')+'</div>';
+  h+='<div class="nacts">'+(canIns&&!insSent?'<button type="button" class="btn wa" id="openIns" aria-expanded="'+showForm+'">'+(showForm?'Cerrar formulario':'Inscribirme')+'</button>':'')+'<a class="btn ghost" href="'+NEXT.maps+'" target="_blank" rel="noopener">Cómo llegar</a></div></div>';
+  h+='<div id="inscripcion"'+(showForm?' class="open"':' hidden')+'>';
   if(!canIns)h+='<div class="insform"><h3 class="rhead">Inscripciones cerradas</h3><p class="sub" style="margin:0">'+(allFull?'Se llenaron los cupos de las dos categorías.':'Las inscripciones no están abiertas en este momento.')+'</p></div>';
   else if(insSent){var fn=esc(String(insSent.n).split(' ')[0]),paid=!!insSent.paid,canPay=!!(insSent.ref&&C.wompiPublicKey);
     h+='<div class="insok'+(paid?'':' due')+'"><b>'+(paid?'¡Pago confirmado, '+fn+'! Tu cupo en '+esc(insSent.c)+' categoría está asegurado.':'¡Listo, '+fn+'! Quedaste inscrito en '+esc(insSent.c)+' categoría.')+'</b>'+
@@ -262,31 +265,42 @@ function render(){
     '<label>Edad<input name="edad" type="number" inputmode="numeric" min="8" max="99" required></label></div>'+
     '<fieldset class="cats"><legend>Categoría</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+money(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
     '<label class="consent"><input type="checkbox" name="acepto"> <span>Autorizo a Caribbean Tennis a usar mis datos solo para gestionar mi inscripción y enviarme información del torneo.</span></label>'+
-    '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+' (incluye $2.000 de comisión del pago en línea)</span></div></form>';
+    '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+' ($110.000 + $2.000 de comisión del pago en línea)</span></div></form>';
   h+='</div>';
   if(canOrg&&orgOn)h+=orgIns(cfgOpen,cupo);
   h+='</section>';
+  h+='<section id="pasos" class="rv"><div><h2>Cómo participar</h2></div><ol class="steps3">'+
+    '<li><b>1</b><div><h3>Inscríbete</h3><p>Llena el formulario con tus datos y escoge tu categoría.</p></div></li>'+
+    '<li><b>2</b><div><h3>Paga en línea</h3><p>'+money(NEXT.precio)+' con Nequi, PSE, Bancolombia o tarjeta. Así aseguras tu cupo.</p></div></li>'+
+    '<li><b>3</b><div><h3>Juega</h3><p>'+NEXT.dateTxt.replace(' de 2026','')+' en el '+NEXT.place+'. Sigue tus partidos en vivo en esta página.</p></div></li></ol></section>';
 
   /* ---------- circuito: ediciones ---------- */
   var F1=P1D.r.filter(function(m){return m[1]==='F'})[0], ch1=F1[4]>F1[5]?F1[2]:F1[3], sb1=ch1===F1[2]?F1[3]:F1[2], sf1=P1D.r.filter(function(m){return m[1]==='S'}).map(function(m){return m[4]>m[5]?m[3]:m[2]});
   var sco=function(a,b){return Math.max(a,b)+'-'+Math.min(a,b)};
-  h+='<section id="paradas"><div><h2>Ediciones</h2><p class="sub">Toca una edición para ver todos sus resultados.</p></div><div class="stops">';
-  h+='<button type="button" class="stop" data-go="p1"><small>1ra Edición · 20 sep 2026</small><b>'+esc(ch1)+'</b><span>Campeón · ganó la final '+sco(F1[4],F1[5])+' a '+esc(sb1)+'</span><span>32 jugadores · Parque de Raquetas</span><span class="go">Ver resultados →</span></button>';
-  h+='<button type="button" class="stop" data-go="inicio"><small>2da Edición · 1 nov 2026</small><b>'+(champ?esc(champ):'Por definir')+'</b><span>'+(champ?'Campeón · ganó la final '+sco(ST.r.F.a,ST.r.F.b)+' a '+esc(loser('F')):'Eliminatoria en juego')+'</span><span>44 jugadores · Sunset Tennis House</span><span class="go">Ver resultados →</span></button>';
-  h+='<button type="button" class="stop" data-go="circuito" data-top="1"><small>'+NEXT.n+' · 12 dic 2026</small><b>Por jugarse</b><span>'+NEXT.place+' · 3ra y 4ta categoría</span><span>Inscripción '+money(NEXT.precio)+'</span><span class="go">Inscribirme →</span></button>';
-  h+='</div></section>';
+  var ndt=NEXT.date.split('-'), nshort=(+ndt[2])+' dic';
+  h+='<section id="paradas" class="rv"><div><h2>El circuito</h2><p class="sub">Toca una edición para ver todos sus resultados.</p></div><ol class="tl">';
+  h+='<li class="done"><time>26 ago</time><div class="tlc"><small>Lanzamiento</small><b>Nace Caribbean Tennis</b><span>Arranca el Circuito Amateur en Barranquilla.</span></div></li>';
+  h+='<li class="done"><time>20 sep</time><button type="button" class="tlc go" data-go="p1"><small>1ra Edición · Parque de Raquetas</small><b>'+esc(ch1)+'</b><span>Campeón · ganó la final '+sco(F1[4],F1[5])+' a '+esc(sb1)+' · 32 jugadores</span><span class="go">Ver resultados →</span></button></li>';
+  h+='<li class="done"><time>1 nov</time><button type="button" class="tlc go" data-go="inicio"><small>2da Edición · Sunset Tennis House</small><b>'+(champ?esc(champ):'Por definir')+'</b><span>'+(champ?'Campeón · ganó la final '+sco(ST.r.F.a,ST.r.F.b)+' a '+esc(loser('F')):'Eliminatoria en juego')+' · 44 jugadores</span><span class="go">Ver resultados →</span></button></li>';
+  h+='<li class="next"><time>'+nshort+'</time><button type="button" class="tlc go" data-go="circuito" data-top="1"><small>'+NEXT.n+' · '+NEXT.place+'</small><b>Por jugarse</b><span>3ra y 4ta categoría · Inscripción '+money(NEXT.precio)+'</span><span class="go">Inscribirme →</span></button></li>';
+  h+='</ol></section>';
+
+  /* top 3 del ranking (inicio) */
+  var t3=CL.slice(0,3);
+  h+='<section id="top3" class="rv"><div class="shead"><h2>Los mejores del circuito</h2><button type="button" class="linkbtn" data-go="ranking">Ver ranking completo →</button></div><div class="podium3">'+
+    t3.map(function(p,i){return '<button type="button" class="p3 p3-'+(i+1)+'" data-p="'+esc(p)+'"><span class="medal">'+(i+1)+'</span><b>'+esc(p)+'</b><span>Elo '+f2(cElo(E,p))+'</span></button>'}).join('')+'</div></section>';
 
   /* ---------- 1ra edición ---------- */
-  h+='<section id="p1res"><div><h2>1ra Edición</h2><p class="sub">Domingo 20 de septiembre de 2026 · Parque de Raquetas · 32 jugadores. Cada jugador jugó 2 partidos de 21 puntos en total y los 8 mejores pasaron a cuartos de final. Desde cuartos ganaba el primero en llegar a 11, y la final fue a 21. Toca un nombre para ver su ficha.</p></div><div class="podium">';
+  h+='<section id="p1res"><div><h2>1ra Edición</h2><p class="sub">Domingo 20 de septiembre de 2026 · Parque de Raquetas · 32 jugadores. Toca un nombre para ver su ficha.</p><details class="howto"><summary>¿Cómo fue el formato?</summary><p>Cada jugador jugó 2 partidos de 21 puntos en total y los 8 mejores pasaron a cuartos de final. Desde cuartos ganaba el primero en llegar a 11, y la final fue a 21.</p></details></div><div class="podium">';
   h+='<div class="pod gold"><img class="podlogo" src="'+FX.logo+'" alt="" width="56" height="56"><small>Campeón</small><b>'+nm1(ch1)+'</b><span>'+sco(F1[4],F1[5])+' en la final</span></div><div class="pod"><small>Subcampeón</small><b>'+nm1(sb1)+'</b></div><div class="pod"><small>Semifinalistas</small><b>'+sf1.map(nm1).join('<br>')+'</b></div></div></section>';
-  h+='<section id="p1tabla"><div><h2>Clasificación</h2><p class="sub">Tabla final tras los 2 partidos de cada jugador. Desempate: partidos ganados, diferencia de puntos y puntos a favor. La columna Elo es el Elo con el que cada jugador terminó la 1ra edición.</p></div><div class="tablewrap"><table><thead><tr><th>Pos.</th><th style="text-align:left">Jugador</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif.</th><th>Elo</th><th>Pasa a</th></tr></thead><tbody>';
+  h+='<section id="p1tabla"><div><h2>Clasificación</h2><p class="sub">Tabla final tras los 2 partidos de cada jugador. Desempate: partidos ganados, diferencia de puntos y puntos a favor. La columna Elo es el Elo con el que cada jugador terminó la 1ra edición.</p></div><div class="tablewrap clip'+(OPEN.p1t?' open':'')+'" data-clip="8"><table><thead><tr><th>Pos.</th><th style="text-align:left">Jugador</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif.</th><th>Elo</th><th>Pasa a</th></tr></thead><tbody>';
   P1D.tab.forEach(function(x,i){var k=i+1,d=E1.R[x[0]]-1000;h+='<tr class="'+(k<=8?'z1':'z3')+(k===8?' cut':'')+(x[0]===me?' me':'')+'"><td class="pos">'+k+'</td><td class="n">'+nm1(x[0])+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td><td>'+x[3]+'</td><td>'+x[4]+'</td><td>'+x[5]+'</td><td>'+(x[6]>0?'+':'')+x[6]+'</td><td>'+f2(E1.R[x[0]])+(Math.abs(d)>=0.05?' <em class="'+(d>=0?'up':'dn')+'">'+sgn(d,1)+'</em>':'')+'</td><td>'+(k<=8?'<span class="zone o">Cuartos</span>':'—')+'</td></tr>'});
-  h+='</tbody></table></div></section>';
+  h+='</tbody></table></div>'+moreBtn('p1t',P1D.tab.length,8,'Ver la tabla completa')+'</section>';
   var card1=function(m){var w=m[4]>m[5];return '<div class="k'+(m[1]==='F'?' final':'')+(me&&(m[2]===me||m[3]===me)?' mine':'')+'"><div class="top"><span>'+m[0]+(wo1(m)?' · W.O.':'')+'</span><span>'+R1N[m[1]]+'</span></div><div class="pl'+(w?'':' lose')+'"><span>'+nm1(m[2])+'</span><span class="sc">'+m[4]+'</span></div><div class="pl'+(w?' lose':'')+'"><span><em>vs</em> '+nm1(m[3])+'</span><span class="sc">'+m[5]+'</span></div></div>'};
   h+='<section id="p1cuadro"><div><h2>Fase final</h2><p class="sub">Cuartos: 1° vs 8°, 2° vs 7°, 3° vs 6° y 4° vs 5°.</p></div><div class="rounds">'+[['C','Cuartos de final'],['S','Semifinales'],['F','Final']].map(function(z){return '<div class="round"><h3>'+z[1]+'</h3><div class="ko">'+P1D.r.filter(function(m){return m[1]===z[0]}).map(card1).join('')+'</div></div>'}).join('')+'<div class="champ"><span class="tag live">Campeón</span><b>'+nm1(ch1)+'</b></div></div></section>';
   var mc1=function(m){var w=m[4]>m[5];return '<div class="m done'+(me&&(m[2]===me||m[3]===me)?' mine':'')+'"><div class="c"><span>'+m[0]+'</span><span>'+(wo1(m)?'<span class="wo">W.O.</span>':'')+'</span></div><div class="pl '+(w?'win':'lose')+'"><span>'+nm1(m[2])+'</span><span class="sc">'+m[4]+'</span></div><div class="vs">vs</div><div class="pl '+(w?'lose':'win')+'"><span>'+nm1(m[3])+'</span><span class="sc">'+m[5]+'</span></div></div>'};
   h+='<section id="p1rondas"><div><h2>Fase de grupos</h2><p class="sub">La Ronda 1 salió del sorteo. En la Ronda 2, el ganador de cada partido jugó contra el perdedor del siguiente. Los W.O. quedaron 21-0.</p></div>';
-  [['R1','Ronda 1'],['R2','Ronda 2']].forEach(function(z){h+='<h3 class="rhead">'+z[1]+'</h3><div class="played">'+P1D.r.filter(function(m){return m[1]===z[0]}).map(mc1).join('')+'</div>'});
+  [['R1','Ronda 1'],['R2','Ronda 2']].forEach(function(z){var L1=P1D.r.filter(function(m){return m[1]===z[0]});h+='<details class="acc" data-acc="p1'+z[0]+'"'+(OPEN['p1'+z[0]]?' open':'')+'><summary><span>'+z[1]+'</span><small>'+L1.length+' partidos</small></summary><div class="played">'+L1.map(mc1).join('')+'</div></details>'});
   h+='</section>';
 
   /* panel del organizador */
@@ -384,21 +398,21 @@ function render(){
   /* jugados el 25 de octubre */
   var D1=S.filter(d1);
   if(D1.length){
-    h+='<div class="d1head"><h3>Jugados el 25 de octubre</h3><p class="sub">'+D1.length+' partidos antes de la lluvia. Sus resultados cuentan para la tabla.</p></div><div class="played">';
+    h+='<details class="acc" data-acc="d1"'+(OPEN.d1?' open':'')+'><summary><span>Jugados el 25 de octubre</span><small>'+D1.length+' partidos antes de la lluvia</small></summary><div class="played">';
     D1.forEach(function(m){var id='L'+m[0], r=ST.r[id], tag=(orgOn&&canOrg)?'button':'div', cls='m'+(r?' done':'')+(me&&(m[3]===me||m[4]===me)?' mine':'')+(orgOn&&canOrg?' edit':'');
       var pl=function(p,sc,win){return '<div class="pl'+(r?(win?' win':' lose'):'')+'"><span>'+nm(p)+'</span>'+(r?'<span class="sc">'+sc+'</span>':'')+'</div>'};
       h+='<'+tag+' class="'+cls+'" data-id="'+id+'"'+(tag==='button'?' type="button" aria-label="Corregir resultado del partido '+m[0]+'"':'')+'><div class="c"><span>25 oct</span><span>'+(r&&r.wo?'<span class="wo">W.O.</span> ':'')+'#'+m[0]+'</span></div>'+pl(m[3],r&&r.a,r&&r.a>r.b)+'<div class="vs">vs</div>'+pl(m[4],r&&r.b,r&&r.b>r.a)+'</'+tag+'>'});
-    h+='</div>';
+    h+='</div></details>';
   }
   h+='</section>';
 
   /* tabla */
   h+='<section id="tabla"><div><h2>Tabla de posiciones '+(ST.close?'':'<span class="tag live">En vivo</span>')+'</h2><p class="sub">'+(ST.close?'Liga cerrada. Esta es la clasificación final.':(done?'Se actualiza con cada resultado.':'Aún no hay resultados: por ahora el orden es alfabético.'))+' Desempate: partidos ganados, diferencia de puntos, puntos a favor y menos puntos en contra. El Elo no cuenta para la tabla. <strong>Clasificado</strong> y <strong>Eliminado</strong> solo aparecen cuando es 100% seguro, pase lo que pase en los partidos que faltan.</p></div>';
-  h+='<div class="tablewrap"><table><thead><tr><th>Pos.</th><th style="text-align:left">Jugador</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif.</th><th>Elo</th><th>Pasa a</th></tr></thead><tbody>';
+  h+='<div class="tablewrap clip'+(OPEN.t2?' open':'')+'" data-clip="12"><table><thead><tr><th>Pos.</th><th style="text-align:left">Jugador</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif.</th><th>Elo</th><th>Pasa a</th></tr></thead><tbody>';
   var shown=ST.close?ST.close.map(function(p){var x=null;L.forEach(function(y){if(y.p===p)x=y});return x}):L;
   var tied=function(u,v){return u&&v&&u.pj>0&&u.pg===v.pg&&u.dif===v.dif&&u.pf===v.pf&&u.pc===v.pc};
   shown.forEach(function(x,i){var k=i+1,d=E.R[x.p]-ELO[x.p],isT=!ST.close&&(tied(x,shown[i-1])||tied(x,shown[i+1]));h+='<tr class="'+(k<=6?'z1':k<=26?'z2':'z3')+(k===6||k===26?' cut':'')+(x.p===me?' me':'')+'"><td class="pos">'+k+'</td><td class="n">'+nm(x.p)+(isT?' <span class="zone tie">Empate</span>':'')+(SA[x.p]==='C'?' <span class="zone ok">Clasificado</span>':SA[x.p]==='E'?' <span class="zone out">Eliminado</span>':'')+(away(x.p)?' <span class="away">sin llegar</span>':'')+'</td><td>'+x.pj+'</td><td>'+x.pg+'</td><td>'+(x.pj-x.pg)+'</td><td>'+x.pf+'</td><td>'+x.pc+'</td><td>'+(x.dif>0?'+':'')+x.dif+'</td><td>'+f2(E.R[x.p])+(Math.abs(d)>0.004?' <em class="'+(d>=0?'up':'dn')+'">'+sgn(d,1)+'</em>':'')+'</td><td>'+(SA[x.p]==='E'?'—':(k<=6?'<span class="zone o">Octavos</span>':k<=26?'<span class="zone s">16vos</span>':'—'))+'</td></tr>'});
-  h+='</tbody></table></div></section>';
+  h+='</tbody></table></div>'+moreBtn('t2',shown.length,12,'Ver la tabla completa')+'</section>';
 
   /* cuadro */
   h+='<section id="cuadro"><div><h2>Eliminatoria '+(ST.close?'':'<span class="tag proj">Proyección</span>')+'</h2><p class="sub">'+(ST.close?'Cuadro definitivo. Los ganadores avanzan solos.':(ligaDone()?'Así quedaría el cuadro si la liga terminara ahora. Se confirma al cerrar la tabla, a las 11:15.':'Los nombres aparecen cuando haya resultados de liga. El cuadro definitivo se arma al cerrar la tabla, a las 11:15.'))+'</p></div><div class="rounds">';
@@ -416,11 +430,12 @@ function render(){
   h+='</div></section>';
 
   /* ranking elo del circuito */
-  h+='<section id="elo"><div><h2>Ranking Elo del circuito</h2><p class="sub">Suma las dos ediciones. Todos arrancan en 1.000 y ganarle a alguien con más Elo suma más (K = 32). Los W.O. no cuentan para el Elo ni para el récord, y solo aparecen los jugadores con al menos un partido jugado. Toca un nombre para ver su ficha.</p></div>';
-  h+='<div class="tablewrap"><table class="elot"><thead><tr><th>Pos.</th><th style="text-align:left">Jugador</th><th>Elo</th><th>Última edición</th><th>Récord</th><th>1ra Edición</th><th>2da Edición</th></tr></thead><tbody>';
-  CL.forEach(function(p,i){var r2=rec2(p),d=(r2[0]+r2[1]>0)?E.R[p]-eloBase(p):E1.R[p]-1000,rt=recTot(p);
-    h+='<tr class="'+(p===me?'me':'')+'"><td class="pos">'+(i+1)+'</td><td class="n">'+nm1(p)+'</td><td><strong>'+f2(cElo(E,p))+'</strong></td><td>'+(Math.abs(d)>0.004?'<em class="'+(d>=0?'up':'dn')+'">'+sgn(d,2)+'</em>':'—')+'</td><td>'+rt[0]+'-'+rt[1]+'</td><td>'+(stage1(p)||'—')+'</td><td>'+(FX.eloOut[p]!=null?'Liga':(stage2(p)||'—'))+'</td></tr>'});
-  h+='</tbody></table></div></section>';
+  h+='<section id="elo"><div><h2>Ranking Elo del circuito</h2><p class="sub">Suma las dos ediciones. Toca un nombre para ver su ficha.</p><details class="howto"><summary>¿Cómo funciona el Elo?</summary><p>Todos arrancan en 1.000. Ganarle a alguien con más Elo suma más y perder con alguien con menos Elo resta más (K = 32). Los W.O. no cuentan para el Elo ni para el récord, y solo aparecen los jugadores con al menos un partido jugado.</p></details></div>';
+  h+='<div class="podium3">'+CL.slice(0,3).map(function(p,i){return '<button type="button" class="p3 p3-'+(i+1)+'" data-p="'+esc(p)+'"><span class="medal">'+(i+1)+'</span><b>'+esc(p)+'</b><span>Elo '+f2(cElo(E,p))+'</span></button>'}).join('')+'</div>';
+  h+='<div class="rksearch"><input id="rkq" type="search" placeholder="Busca un jugador" autocomplete="off" value="'+esc(RKQ)+'" aria-label="Buscar jugador en el ranking"></div><ol class="rklist" id="rklist">';
+  CL.forEach(function(p,i){var r2=rec2(p),d=(r2[0]+r2[1]>0)?E.R[p]-eloBase(p):E1.R[p]-1000,rt=recTot(p),st1=stage1(p),st2=FX.eloOut[p]!=null?'Liga':stage2(p);
+    h+='<li class="rkrow'+(p===me?' me':'')+'" data-name="'+esc(p.toLowerCase())+'" data-i="'+i+'"><span class="pos">'+(i+1)+'</span><button type="button" class="who" data-p="'+esc(p)+'"><b>'+esc(p)+'</b><small>'+rt[0]+'-'+rt[1]+' en el circuito'+(st2?' · 2da: '+st2:st1?' · 1ra: '+st1:'')+'</small></button><span class="elo"><b>'+f2(cElo(E,p))+'</b>'+(Math.abs(d)>0.004?'<em class="'+(d>=0?'up':'dn')+'">'+(d>=0?'▲ ':'▼ ')+sgn(d,1).replace('-','')+'</em>':'')+'</span></li>'});
+  h+='</ol><button type="button" class="btn more" id="rkMore"'+(CL.length>RKN?'':' hidden')+'>Ver más jugadores</button><p class="sub" id="rkNone" hidden>No hay jugadores con ese nombre.</p></section>';
 
 
   /* récords del circuito */
@@ -445,8 +460,8 @@ function render(){
     if(lng)RC.push(['Partido más largo',nm1(lng.m.a)+' vs '+nm1(lng.m.b),lng.d+' minutos · '+lng.m.sa+'-'+lng.m.sb+' · '+esc(lng.m.lab)]);
     if(sht&&sht!==lng)RC.push(['Partido más corto',nm1(sht.m.a)+' vs '+nm1(sht.m.b),sht.d+' minutos · '+sht.m.sa+'-'+sht.m.sb+' · '+esc(sht.m.lab)]);
   })();
-  if(RC.length){h+='<section id="records"><div><h2>Récords del circuito</h2><p class="sub">Contando las dos ediciones. Los W.O. no cuentan. Las duraciones solo existen para la 2da Edición.</p></div><div class="hls">';
-    RC.forEach(function(x){h+='<div class="hl"><small>'+x[0]+'</small><b>'+x[1]+'</b><span>'+x[2]+'</span></div>'});h+='</div></section>'}
+  if(RC.length){h+='<section id="records" class="rv"><div class="shead"><h2>Récords del circuito</h2><span class="carnav"><button type="button" class="cbtn" data-car="-1" aria-label="Anterior">‹</button><button type="button" class="cbtn" data-car="1" aria-label="Siguiente">›</button></span></div><p class="sub" style="margin-top:-6px">Contando las dos ediciones. Desliza para ver más.</p><div class="car" id="car">';
+    RC.forEach(function(x,i){h+='<div class="hl card'+(i%3)+'"><small>'+x[0]+'</small><b>'+x[1]+'</b><span>'+x[2]+'</span></div>'});h+='</div><div class="cdots">'+RC.map(function(x,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>'}
 
   /* reemplazos (organizador) */
   if(canOrg&&orgOn){
@@ -514,6 +529,16 @@ function orgIns(cfgOpen,cupo){
 }
 function loadIns(){if(!canOrg)return;DB.inscritos().then(function(r){INSROWS=r||[];keepRender()}).catch(function(e){INSROWS=[];keepRender();toast('No se pudieron cargar los inscritos.',5000)})}
 function loadPublic(){Promise.all([DB.config(),DB.llenas()]).then(function(x){INSCFG=x[0];LLENAS=x[1]||{};if(!typing())keepRender()})}
+function smooth(){return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}
+function applyRk(){var q=norm(RKQ||''),n=0,shown=0;root.querySelectorAll('#rklist .rkrow').forEach(function(li){var hit=q?norm(li.getAttribute('data-name')).indexOf(q)>=0:(+li.getAttribute('data-i')<RKN);li.hidden=!hit;if(hit)shown++;n++});
+  var m=document.getElementById('rkMore');if(m)m.hidden=!!q||RKN>=n;var z=document.getElementById('rkNone');if(z)z.hidden=shown>0}
+function intro(){var rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els=root.querySelectorAll('.rv');if(rm||!('IntersectionObserver' in window)){els.forEach(function(x){x.classList.add('in')});return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px'});
+  els.forEach(function(x){io.observe(x)});
+  root.querySelectorAll('[data-count]').forEach(function(b){var to=+b.getAttribute('data-count');if(!(to>0))return;var t0=null,d=900;
+    var f=function(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/d),v=Math.round(to*(1-Math.pow(1-k,3)));b.textContent=v.toLocaleString('es-CO');if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
+function moreBtn(k,n,lim,txt){if(n<=lim)return '';return '<button type="button" class="btn more" data-more="'+k+'">'+(OPEN[k]?'Ver menos':txt+' ('+n+')')+'</button>'}
 function keepRender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 function typing(){var f=document.getElementById('insF');if(!f)return false;return [].some.call(f.elements,function(e){return (e.type==='checkbox'||e.type==='radio')?e.checked:!!e.value})}
 /* ---------- pago en línea (Wompi) ---------- */
@@ -588,6 +613,16 @@ function applyTab(){
 function setTab(t,scroll){tab=t;LS.set('ct_tab',t);applyTab();if(scroll){var n=root.querySelector('.tabs');if(n&&window.scrollY>n.offsetTop)window.scrollTo(0,n.offsetTop)}}
 function bind(){
   applyTab();
+  var oi=document.getElementById('openIns');if(oi)oi.onclick=function(){INSOPEN=!INSOPEN;keepRender();if(INSOPEN){var f=document.getElementById('inscripcion');if(f){f.scrollIntoView({block:'start',behavior:smooth()});var n=f.querySelector('input[name=nombre]');if(n)setTimeout(function(){n.focus({preventScroll:true})},350)}}};
+  root.querySelectorAll('[data-more]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-more');OPEN[k]=!OPEN[k];var w=b.previousElementSibling;if(w&&w.classList.contains('clip'))w.classList.toggle('open',!!OPEN[k]);var y=b.getBoundingClientRect().top;keepRender();if(!OPEN[k]){var s=b.closest('section');if(s)s.scrollIntoView({block:'start'})}}});
+  root.querySelectorAll('details[data-acc]').forEach(function(d){d.addEventListener('toggle',function(){OPEN[d.getAttribute('data-acc')]=d.open})});
+  var rq=document.getElementById('rkq');if(rq){rq.oninput=function(){RKQ=rq.value;applyRk()};applyRk()}
+  var rm=document.getElementById('rkMore');if(rm)rm.onclick=function(){RKN+=20;applyRk()};
+  var car=document.getElementById('car');if(car){var dots=root.querySelectorAll('.cdots i');
+    var step=function(){var c=car.querySelector('.hl');return c?c.getBoundingClientRect().width+12:300};
+    root.querySelectorAll('[data-car]').forEach(function(b){b.onclick=function(){car.scrollBy({left:step()*+b.getAttribute('data-car'),behavior:smooth()})}});
+    car.addEventListener('scroll',function(){var i=Math.round(car.scrollLeft/step());dots.forEach(function(d,k){d.className=k===i?'on':''})},{passive:true})}
+  if(FIRST){FIRST=false;intro()}else root.querySelectorAll('.rv').forEach(function(x){x.classList.add('in')});
   root.querySelectorAll('.tabs [data-tab]').forEach(function(b){b.onclick=function(){setTab(b.getAttribute('data-tab'),true)}});
   root.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){setTab(b.getAttribute('data-go'),true);if(b.hasAttribute('data-top')){var x=document.getElementById('proxima');if(x)x.scrollIntoView({block:'start'})}}});
   var insF=document.getElementById('insF');if(insF)insF.onsubmit=function(ev){ev.preventDefault();
