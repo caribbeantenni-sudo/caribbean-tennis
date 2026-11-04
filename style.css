@@ -352,3 +352,5 @@ em.up{color:var(--ok)} em.dn{color:var(--sun)}
 .lgf input{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px;color:var(--ink)}
 .lgf .err{color:var(--sun);font-weight:600;font-size:14px;min-height:1.2em}
 #inscripcion{scroll-margin-top:110px}
+.insok.due{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.insok .nacts{margin-top:4px}

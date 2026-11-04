@@ -4,5 +4,7 @@ window.CT_CONFIG = {
   supabaseUrl: 'https://ruysrsrlevqkfzfjlujc.supabase.co',
   supabaseKey: 'sb_publishable_6n2Qcvugd2OR4-zqWsgQkA_yBSxEehc',
   adminEmail: 'caribbean.tenni@gmail.com',
-  edicionActual: 3
+  edicionActual: 3,
+  /* Llave pública de Wompi (empieza por pub_test_ o pub_prod_). Vacía = pago en línea apagado. */
+  wompiPublicKey: ''
 };

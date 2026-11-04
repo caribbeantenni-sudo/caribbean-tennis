@@ -51,10 +51,12 @@
 
     /* ---------- inscripciones ---------- */
     inscribir: function (d) {
-      return need().from('inscripciones').insert({
+      var row = {
         edicion: C.edicionActual, nombre: d.nombre, correo: d.correo,
         telefono: d.telefono, edad: d.edad, categoria: d.categoria
-      }).then(unwrap);
+      };
+      if (d.referencia) row.referencia = d.referencia;
+      return need().from('inscripciones').insert(row).then(unwrap);
     },
     config: function () {
       if (!sb) return Promise.resolve(null);

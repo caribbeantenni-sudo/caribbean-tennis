@@ -18,3 +18,13 @@ Entra con el enlace **"Acceso organizador"** al final de la página, usando el c
 ## Cambios
 
 Cada cambio que se sube a la rama `main` de GitHub se publica solo en caribbeantennis.com en 1 o 2 minutos.
+
+## Pagos en línea (Wompi)
+
+- `functions/api/firma.js`: calcula la firma de integridad del pago en el servidor.
+- `functions/api/wompi.js`: recibe los eventos de Wompi y marca la inscripción como pagada.
+- `functions/api/estado.js`: le dice a la página si una inscripción ya quedó pagada.
+- Base de datos: correr `supabase_pagos.sql` una vez en Supabase.
+- Variables secretas en Cloudflare Pages (Settings → Variables and Secrets): `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET`, `SUPABASE_SERVICE_KEY`. Opcional: `PRECIO_CENTAVOS` (por defecto 11200000 = $112.000).
+- Llave pública de Wompi en `config.js` (`wompiPublicKey`). Vacía = pago en línea apagado.
+- URL de eventos en Wompi: `https://caribbeantennis.com/api/wompi`.

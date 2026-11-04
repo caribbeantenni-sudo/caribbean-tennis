@@ -50,7 +50,7 @@ function allMatches(E){var out=[];
   L2.forEach(function(id){var r=ST.r[id];if(!r||r.wo)return;var pp=players(id);if(!pp[0]||!pp[1])return;var md=E.md[id];out.push({ed:2,lab:labelOf(id)+' · 2da Edición',a:eloName(pp[0],id),b:eloName(pp[1],id),sa:r.a,sb:r.b,ea:md?md.ea:null,id:id})});
   return out}
 /* ---------- 3ra edición e inscripciones ---------- */
-var NEXT={n:'3ra Edición',date:'2026-12-12',dateTxt:'Sábado 12 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,cats:[['3ra','3ra categoría',800000],['4ta','4ta categoría',400000]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
+var NEXT={n:'3ra Edición',date:'2026-12-12',dateTxt:'Sábado 12 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:112000,cats:[['3ra','3ra categoría',800000],['4ta','4ta categoría',400000]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
 var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{insSent=JSON.parse(localStorage.getItem('ct_ins')||'null')}catch(e){}
 function daysTo(d){if(!TODAY)return null;var a=TODAY.split('-'),b=d.split('-');return Math.round((Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/864e5)}
 function money(n){return '$'+n.toLocaleString('es-CO')}
@@ -244,12 +244,17 @@ function render(){
   var cfgOpen=!INSCFG||INSCFG.abiertas!==false, cupo=(INSCFG&&INSCFG.cupo)||48, dleft=daysTo(NEXT.date);
   var allFull=NEXT.cats.every(function(c){return LLENAS[c[0]]}), canIns=cfgOpen&&!allFull;
   h+='<section id="proxima"><div class="nexted"><div class="ey">Próxima · Inscripciones '+(!cfgOpen?'cerradas':allFull?'cerradas: cupos llenos':'abiertas')+' · '+cupo+' cupos por categoría</div><div class="big">'+NEXT.n+'</div>';
-  h+='<div class="nfacts"><div><span>Fecha</span><strong>'+NEXT.dateTxt+'</strong></div><div><span>Sede</span><strong>'+NEXT.place+', '+NEXT.city+'</strong></div><div><span>Inscripción</span><strong>'+money(NEXT.fee)+'</strong></div>'+(dleft!=null&&dleft>0?'<div><span>Faltan</span><strong>'+dleft+(dleft===1?' día':' días')+'</strong></div>':'')+'</div>';
+  h+='<div class="nfacts"><div><span>Fecha</span><strong>'+NEXT.dateTxt+'</strong></div><div><span>Sede</span><strong>'+NEXT.place+', '+NEXT.city+'</strong></div><div><span>Inscripción</span><strong>'+money(NEXT.precio)+'<small style="display:block;font-size:12px;font-weight:500;opacity:.8">$110.000 + $2.000 de comisión del pago en línea</small></strong></div>'+(dleft!=null&&dleft>0?'<div><span>Faltan</span><strong>'+dleft+(dleft===1?' día':' días')+'</strong></div>':'')+'</div>';
   h+='<div class="nfacts">'+NEXT.cats.map(function(c){return '<div><span>Premio '+c[1]+'</span><strong>'+money(c[2])+'</strong></div>'}).join('')+'</div>';
   h+='<div class="nacts">'+(canIns?'<a class="btn wa" href="#inscripcion">Inscribirme</a>':'')+'<a class="btn ghost" href="'+NEXT.maps+'" target="_blank" rel="noopener">Cómo llegar</a></div></div>';
   h+='<div id="inscripcion">';
   if(!canIns)h+='<div class="insform"><h3 class="rhead">Inscripciones cerradas</h3><p class="sub" style="margin:0">'+(allFull?'Se llenaron los cupos de las dos categorías.':'Las inscripciones no están abiertas en este momento.')+'</p></div>';
-  else if(insSent)h+='<div class="insok"><b>¡Listo, '+esc(String(insSent.n).split(' ')[0])+'! Quedaste inscrito en '+esc(insSent.c)+' categoría.</b><span>Para confirmar tu cupo paga la inscripción de '+money(NEXT.fee)+'. La organización te va a escribir con los datos de pago.</span><button type="button" class="linkbtn" id="insAgain" style="justify-self:start">Inscribir a otra persona</button></div>';
+  else if(insSent){var fn=esc(String(insSent.n).split(' ')[0]),paid=!!insSent.paid,canPay=!!(insSent.ref&&C.wompiPublicKey);
+    h+='<div class="insok'+(paid?'':' due')+'"><b>'+(paid?'¡Pago confirmado, '+fn+'! Tu cupo en '+esc(insSent.c)+' categoría está asegurado.':'¡Listo, '+fn+'! Quedaste inscrito en '+esc(insSent.c)+' categoría.')+'</b>'+
+      (paid?'<span>Te esperamos el '+NEXT.dateTxt.charAt(0).toLowerCase()+NEXT.dateTxt.slice(1)+' en el '+NEXT.place+'.</span>':
+        '<span>Para asegurar tu cupo paga la inscripción: <strong>'+money(NEXT.precio)+'</strong> ($110.000 + $2.000 de comisión). '+(canPay?'Puedes pagar con Nequi, PSE, Bancolombia o tarjeta.':'La organización te va a escribir con los datos de pago.')+'</span>'+
+        (canPay?'<div class="nacts"><button type="button" class="btn primary" id="payBtn">Pagar '+money(NEXT.precio)+'</button></div><div class="insmsg" id="payMsg" aria-live="polite"></div>':''))+
+      '<button type="button" class="linkbtn" id="insAgain" style="justify-self:start">Inscribir a otra persona</button></div>'}
   else h+='<form class="insform" id="insF" novalidate><div><h3 class="rhead">Inscríbete</h3><p class="sub" style="margin:2px 0 0">Llena tus datos y escoge tu categoría. Tus datos solo los ve la organización.</p></div>'+
     '<div class="grid"><label>Nombre completo<input name="nombre" autocomplete="name" maxlength="80" required></label>'+
     '<label>Correo electrónico<input name="correo" type="email" autocomplete="email" maxlength="120" required></label>'+
@@ -257,7 +262,7 @@ function render(){
     '<label>Edad<input name="edad" type="number" inputmode="numeric" min="8" max="99" required></label></div>'+
     '<fieldset class="cats"><legend>Categoría</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+money(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
     '<label class="consent"><input type="checkbox" name="acepto"> <span>Autorizo a Caribbean Tennis a usar mis datos solo para gestionar mi inscripción y enviarme información del torneo.</span></label>'+
-    '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Inscripción: '+money(NEXT.fee)+'</span></div></form>';
+    '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+' (incluye $2.000 de comisión del pago en línea)</span></div></form>';
   h+='</div>';
   if(canOrg&&orgOn)h+=orgIns(cfgOpen,cupo);
   h+='</section>';
@@ -268,7 +273,7 @@ function render(){
   h+='<section id="paradas"><div><h2>Ediciones</h2><p class="sub">Toca una edición para ver todos sus resultados.</p></div><div class="stops">';
   h+='<button type="button" class="stop" data-go="p1"><small>1ra Edición · 20 sep 2026</small><b>'+esc(ch1)+'</b><span>Campeón · ganó la final '+sco(F1[4],F1[5])+' a '+esc(sb1)+'</span><span>32 jugadores · Parque de Raquetas</span><span class="go">Ver resultados →</span></button>';
   h+='<button type="button" class="stop" data-go="inicio"><small>2da Edición · 1 nov 2026</small><b>'+(champ?esc(champ):'Por definir')+'</b><span>'+(champ?'Campeón · ganó la final '+sco(ST.r.F.a,ST.r.F.b)+' a '+esc(loser('F')):'Eliminatoria en juego')+'</span><span>44 jugadores · Sunset Tennis House</span><span class="go">Ver resultados →</span></button>';
-  h+='<button type="button" class="stop" data-go="circuito" data-top="1"><small>'+NEXT.n+' · 12 dic 2026</small><b>Por jugarse</b><span>'+NEXT.place+' · 3ra y 4ta categoría</span><span>Inscripción '+money(NEXT.fee)+'</span><span class="go">Inscribirme →</span></button>';
+  h+='<button type="button" class="stop" data-go="circuito" data-top="1"><small>'+NEXT.n+' · 12 dic 2026</small><b>Por jugarse</b><span>'+NEXT.place+' · 3ra y 4ta categoría</span><span>Inscripción '+money(NEXT.precio)+'</span><span class="go">Inscribirme →</span></button>';
   h+='</div></section>';
 
   /* ---------- 1ra edición ---------- */
@@ -504,13 +509,41 @@ function orgIns(cfgOpen,cupo){
   var L=INSROWS.filter(function(r){return !insFilter||r.categoria===insFilter});
   if(!L.length)return h+'<p class="sub" style="margin:0">Todavía no hay inscritos'+(insFilter?' en esta categoría':'')+'.</p></div>';
   h+='<div class="tablewrap"><table class="otable"><thead><tr><th>#</th><th>Nombre</th><th>Cat.</th><th>Teléfono</th><th>Correo</th><th>Edad</th><th>Inscrito</th><th>Pago</th><th></th></tr></thead><tbody>'+
-    L.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td class="n">'+esc(r.nombre)+'</td><td>'+esc(r.categoria)+'</td><td><a href="https://wa.me/'+waNum(r.telefono)+'" target="_blank" rel="noopener">'+esc(r.telefono)+'</a></td><td><a href="mailto:'+esc(r.correo)+'">'+esc(r.correo)+'</a></td><td>'+esc(r.edad)+'</td><td>'+fdate(r.created_at)+'</td><td><button type="button" class="btn sm" data-pay="'+esc(r.id)+'">'+(r.pagado?'<span class="oktag">Pagó</span>':'Marcar pago')+'</button></td><td><button type="button" class="btn sm danger" data-idel="'+esc(r.id)+'" aria-label="Borrar inscripción de '+esc(r.nombre)+'">✕</button></td></tr>'}).join('')+'</tbody></table></div>';
+    L.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td class="n">'+esc(r.nombre)+'</td><td>'+esc(r.categoria)+'</td><td><a href="https://wa.me/'+waNum(r.telefono)+'" target="_blank" rel="noopener">'+esc(r.telefono)+'</a></td><td><a href="mailto:'+esc(r.correo)+'">'+esc(r.correo)+'</a></td><td>'+esc(r.edad)+'</td><td>'+fdate(r.created_at)+'</td><td><button type="button" class="btn sm" data-pay="'+esc(r.id)+'">'+(r.pagado?'<span class="oktag">Pagó'+(r.pago_metodo?' · '+metodoTxt(r.pago_metodo):'')+'</span>':(r.pago_estado&&r.pago_estado!=='APPROVED'?'<span class="pdtag">'+estadoTxt(r.pago_estado)+'</span> ':'')+'Marcar pago')+'</button></td><td><button type="button" class="btn sm danger" data-idel="'+esc(r.id)+'" aria-label="Borrar inscripción de '+esc(r.nombre)+'">✕</button></td></tr>'}).join('')+'</tbody></table></div>';
   return h+'</div>';
 }
 function loadIns(){if(!canOrg)return;DB.inscritos().then(function(r){INSROWS=r||[];keepRender()}).catch(function(e){INSROWS=[];keepRender();toast('No se pudieron cargar los inscritos.',5000)})}
 function loadPublic(){Promise.all([DB.config(),DB.llenas()]).then(function(x){INSCFG=x[0];LLENAS=x[1]||{};if(!typing())keepRender()})}
 function keepRender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 function typing(){var f=document.getElementById('insF');if(!f)return false;return [].some.call(f.elements,function(e){return (e.type==='checkbox'||e.type==='radio')?e.checked:!!e.value})}
+/* ---------- pago en línea (Wompi) ---------- */
+function newRef(){var a=new Uint8Array(10);crypto.getRandomValues(a);return 'CT'+C.edicionActual+'-'+Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2)}).join('')}
+function saveSent(){try{localStorage.setItem('ct_ins',JSON.stringify(insSent))}catch(e){}}
+function metodoTxt(m){return {CARD:'Tarjeta',NEQUI:'Nequi',PSE:'PSE',BANCOLOMBIA_TRANSFER:'Bancolombia',BANCOLOMBIA_QR:'QR Bancolombia',BANCOLOMBIA_COLLECT:'Bancolombia',DAVIPLATA:'Daviplata'}[m]||m}
+function estadoTxt(e){return {DECLINED:'Pago rechazado',ERROR:'Error en el pago',VOIDED:'Pago anulado',PENDING:'Pago en proceso',MONTO_INCORRECTO:'Pagó un valor distinto'}[e]||e}
+function loadWompi(){return new Promise(function(res,rej){if(window.WidgetCheckout)return res();var x=document.createElement('script');x.src='https://checkout.wompi.co/widget.js';x.onload=function(){res()};x.onerror=function(){rej(new Error('widget'))};document.head.appendChild(x)})}
+function pagar(){
+  if(!insSent||!insSent.ref||!C.wompiPublicKey)return;
+  var m=document.getElementById('payMsg'),b=document.getElementById('payBtn'),say=function(t,e){if(m){m.className='insmsg'+(e?' err':'');m.textContent=t}};
+  if(b)b.disabled=true;say('Preparando el pago…');
+  Promise.all([loadWompi(),fetch('/api/firma',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({referencia:insSent.ref})}).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j})})]).then(function(x){
+    var f=x[1],cd={email:insSent.correo,fullName:insSent.n},tel=String(insSent.tel||'').replace(/\D/g,'');
+    if(tel.length===10){cd.phoneNumber=tel;cd.phoneNumberPrefix='+57'}
+    var w=new WidgetCheckout({currency:f.currency,amountInCents:f.amountInCents,reference:insSent.ref,publicKey:C.wompiPublicKey,signature:{integrity:f.integrity},redirectUrl:location.origin+'/?pago='+insSent.ref,customerData:cd});
+    if(b)b.disabled=false;say('');
+    w.open(function(res){var t=res&&res.transaction;if(!t)return;
+      if(t.status==='APPROVED'){say('Pago aprobado. Confirmando tu cupo…');checkPago(insSent.ref,8)}
+      else if(t.status==='DECLINED'||t.status==='ERROR'||t.status==='VOIDED')say('El pago no se aprobó. Puedes intentarlo de nuevo.',true);
+      else{say('Tu pago está en proceso. Te avisamos aquí apenas se apruebe.');checkPago(insSent.ref,12)}});
+  }).catch(function(e){if(b)b.disabled=false;
+    if(e&&e.error==='ya_pago'){insSent.paid=true;saveSent();keepRender();return}
+    say('No se pudo abrir el pago. Inténtalo de nuevo en un momento.',true)});
+}
+function checkPago(ref,tries){
+  var again=function(){if(tries>1)setTimeout(function(){checkPago(ref,tries-1)},5000)};
+  fetch('/api/estado?ref='+encodeURIComponent(ref)).then(function(r){return r.json()}).then(function(j){
+    if(j&&j.pagado){if(insSent&&insSent.ref===ref){insSent.paid=true;saveSent()}if(canOrg)loadIns();keepRender();toast('¡Pago confirmado! Tu cupo está asegurado.',4000)}else again()}).catch(again);
+}
 function loginSheet(){
   sheet('<h3>Acceso organizador</h3><form id="lgF" class="lgf"><label>Correo<input name="e" type="email" autocomplete="username" required></label><label>Contraseña<input name="p" type="password" autocomplete="current-password" required></label><div class="err" id="lgErr" aria-live="polite"></div><div class="acts"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Entrar</button></div></form>',function(s,close){
     var f=s.querySelector('#lgF'),er=s.querySelector('#lgErr');f.e.focus();
@@ -568,12 +601,14 @@ function bind(){
     if(!d.categoria)return bad('Escoge tu categoría.');
     if(!f.acepto.checked)return bad('Para inscribirte debes autorizar el uso de tus datos.');
     b.disabled=true;m.className='insmsg';m.textContent='Enviando…';
-    DB.inscribir(d).then(function(){insSent={n:d.nombre,c:d.categoria};try{localStorage.setItem('ct_ins',JSON.stringify(insSent))}catch(e){}if(canOrg)loadIns();render();var x=document.getElementById('inscripcion');if(x)x.scrollIntoView({block:'start'})})
+    d.referencia=C.wompiPublicKey?newRef():null;
+    DB.inscribir(d).then(function(){insSent={n:d.nombre,c:d.categoria,ref:d.referencia,correo:d.correo,tel:d.telefono};saveSent();if(canOrg)loadIns();render();var x=document.getElementById('inscripcion');if(x)x.scrollIntoView({block:'start'});if(document.getElementById('payBtn'))pagar()})
     .catch(function(e){b.disabled=false;var t=String(e&&e.message||'');
       if(e&&e.code==='23505')return bad('Ese correo ya está inscrito en esta edición.');
       if(/cupo_lleno/.test(t)){DB.llenas().then(function(x){LLENAS=x||{}});return bad('Esa categoría se acaba de llenar.')}
       if(/inscripciones_cerradas/.test(t))return bad('Las inscripciones están cerradas.');
       bad('No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.')})};
+  var pb=document.getElementById('payBtn');if(pb)pb.onclick=pagar;
   var ia=document.getElementById('insAgain');if(ia)ia.onclick=function(){insSent=null;try{localStorage.removeItem('ct_ins')}catch(e){}keepRender()};
   root.querySelectorAll('[data-insf]').forEach(function(b){b.onclick=function(){insFilter=b.getAttribute('data-insf');keepRender()}});
   root.querySelectorAll('[data-pay]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-pay'),r=INSROWS.filter(function(x){return x.id===id})[0];if(!r)return;b.disabled=true;
@@ -585,7 +620,7 @@ function bind(){
     if(isNaN(c)||c<0){er.textContent='Escribe un número de cupos válido.';return}
     DB.setConfig(c,o).then(function(){INSCFG={edicion:C.edicionActual,cupo:c,abiertas:o};return DB.llenas()}).then(function(x){LLENAS=x||{};keepRender();toast('Inscripciones actualizadas',2500)}).catch(function(){er.textContent='No se pudo guardar.'})};
   var cv=document.getElementById('insCsv');if(cv)cv.onclick=function(){var q=function(v){v=String(v==null?'':v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-    var rows=[['Nombre','Categoría','Correo','Teléfono','Edad','Pagó','Fecha de inscripción']].concat(INSROWS.map(function(r){return [r.nombre,r.categoria,r.correo,r.telefono,r.edad,r.pagado?'Sí':'No',fdate(r.created_at)]}));
+    var rows=[['Nombre','Categoría','Correo','Teléfono','Edad','Pagó','Medio de pago','Referencia','Fecha de inscripción']].concat(INSROWS.map(function(r){return [r.nombre,r.categoria,r.correo,r.telefono,r.edad,r.pagado?'Sí':'No',r.pago_metodo?metodoTxt(r.pago_metodo):(r.pagado?'Manual':''),r.referencia||'',fdate(r.created_at)]}));
     var blob=new Blob(['﻿'+rows.map(function(r){return r.map(q).join(';')}).join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='inscritos-3ra-edicion.csv';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)};
   var ir=document.getElementById('insReload');if(ir)ir.onclick=function(){INSROWS=null;keepRender();loadIns()};
@@ -702,5 +737,6 @@ if(sy){SS.del('ct2_scroll');window.scrollTo(0,+sy)} if(sm){SS.del('ct2_msg');toa
 setInterval(function(){var ae=document.activeElement;if(document.querySelector('.modal')||busy||draftHere||(ae&&(ae.tagName==='INPUT'||ae.tagName==='SELECT'))||typing())return;
   DB.loadKV(['st']).then(function(kv){if(kv.st&&JSON.stringify(kv.st)!==JSON.stringify(ST)){ST=kv.st;if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={}}keepRender()})},60000);
 loadPublic();
+(function(){try{var q=new URLSearchParams(location.search),ref=q.get('pago');if(ref){history.replaceState(null,'',location.pathname);toast('Verificando tu pago…',3000);checkPago(ref,8)}}catch(e){}})();
 DB.sessionEmail().then(function(e){if(e&&e===String(C.adminEmail).toLowerCase()){canOrg=true;loadIns();keepRender()}});
 };
