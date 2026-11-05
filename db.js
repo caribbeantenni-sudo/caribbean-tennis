@@ -96,7 +96,7 @@
   function start(d) {
     if (started) return; started = true;
     window.__FX = JSON.parse(JSON.stringify(d.fx)); window.__ST = JSON.parse(JSON.stringify(d.st)); window.__SEEDED = d.seeded;
-    window.__FX.logo = 'logo.webp';
+    window.__FX.logo = 'img/perfil.svg';
     window.__BOOTFX = JSON.stringify(d.fx);
     window.startApp();
   }
