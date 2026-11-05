@@ -534,3 +534,31 @@ h1{color:var(--cream)}
 .orgc>:last-child{margin-bottom:16px}
 .orgph{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
 .story p{max-width:none;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+
+/* niveles del circuito */
+.ladder{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:end}
+.lv .bar{border-radius:12px 12px 6px 6px;padding:10px 10px 12px;display:grid;gap:2px;align-content:end;background:var(--surface);border:1px solid var(--line);position:relative}
+.lv1 .bar{min-height:110px}.lv2 .bar{min-height:140px}.lv3 .bar{min-height:170px}.lv4 .bar{min-height:200px}
+.lv2 .bar{background:var(--court-soft)}
+.lv3 .bar{background:linear-gradient(170deg,#1C4C59,#315A4E);color:var(--cream);border-color:transparent}
+.lv4 .bar{background:linear-gradient(170deg,#0C3C52,#1C4C59);color:var(--cream);border-color:transparent}
+.lv .num{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.lv b{font-family:var(--display);font-size:22px;font-weight:900;text-transform:uppercase;line-height:1}
+.lv small{font-size:12px;opacity:.8}
+.lv.now .bar{border:2px solid var(--lime);box-shadow:0 0 0 3px rgba(var(--lime-rgb),.25)}
+.lv em{position:absolute;top:-11px;left:8px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--lime);color:#0C3C52;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.lvdesc{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
+.lvdesc b{color:var(--ink)}
+.lvdesc li.now{color:var(--ink)}
+.lvdesc li.now b{background:var(--sun-soft);padding:0 4px;border-radius:4px}
+@media (max-width:560px){
+  .ladder{grid-template-columns:1fr;gap:6px;align-items:stretch}
+  .lv4{order:1}.lv3{order:2}.lv2{order:3}.lv1{order:4}
+  .lv .bar{min-height:0!important;border-radius:10px;padding:10px 12px;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+  .lv1 .bar{width:58%}.lv2 .bar{width:72%}.lv3 .bar{width:86%}.lv4 .bar{width:100%}
+  .lv .num{grid-column:1}.lv b{font-size:19px}.lv small{grid-column:2;grid-row:1;justify-self:end;text-align:right}
+  .lv b{grid-column:1;grid-row:2}.lv .num{grid-row:1}.lv small{grid-row:1 / span 2}
+  .lv1 .bar{margin-top:12px}
+  .lvdesc{display:none}
+  .lv small{white-space:nowrap}
+}

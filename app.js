@@ -51,7 +51,8 @@ function allMatches(E){var out=[];
   return out}
 /* ---------- 3ra edición e inscripciones ---------- */
 var PAGO={llave:'3225756567',cuenta:'91201825631',titular:'Mateo González',wa:'573225756567'};
-var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:110000,cats:[['4ta-mujeres','4ta mujeres',400000],['4ta-hombres','4ta hombres',null]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
+var NIV=[['Futures','4ta','Nivel de entrada. Para quienes están empezando a competir.'],['Challenger','3ra','Nivel intermedio. Juegas partidos seguido y quieres dar el salto.'],['Masters','2da','Nivel avanzado. Golpes sólidos y experiencia en torneos.'],['Grand Slam','1ra','El nivel más alto del circuito.']], NIVHOY=0;
+var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:110000,cats:[['4ta-mujeres','Futures mujeres',400000],['4ta-hombres','Futures hombres',null]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
 function catName(k){var x=NEXT.cats.filter(function(c){return c[0]===k})[0];return x?x[1]:({'3ra':'3ra categoría','4ta':'4ta categoría'}[k]||k)}
 function pagoBox(fn){var msg=encodeURIComponent('Hola, soy '+(insSent?insSent.n:'')+'. Me inscribí en '+catName(insSent?insSent.c:'')+' de la '+NEXT.n+' de Caribbean Tennis. Aquí va mi comprobante de pago.');
   var row=function(k,v,show){return '<div class="prow"><span>'+k+'</span><b>'+show+'</b><button type="button" class="btn sm" data-copy="'+v+'">Copiar</button></div>'};
@@ -72,7 +73,7 @@ var SS={get:function(k){try{return sessionStorage.getItem(k)}catch(e){return nul
 var me=null; /* la sección Mis partidos se quitó */
 var TABS=[['circuito','Inicio'],['ranking','Ranking'],['p1','1ra Edición'],['inicio','2da Edición']];
 var SUB=[['inicio','Resumen'],['liga','Liga'],['tabla','Tabla y cuadro'],['info','Info']];
-var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',nosotros:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
+var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',niveles:'circuito',nosotros:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
 var TODAY=(function(){try{var o={};new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value});return o.year+'-'+o.month+'-'+o.day}catch(e){return ''}})();
 var tab=LS.get('ct_tab'); if(['circuito','ranking','p1','inicio','liga','tabla','info'].indexOf(tab)<0)tab='circuito';
 var OPEN={}, INSOPEN=false, RKQ='', RKN=20, FIRST=true;
@@ -270,12 +271,15 @@ function render(){
     '<label>Correo electrónico<input name="correo" type="email" autocomplete="email" maxlength="120" required></label>'+
     '<label>Teléfono (WhatsApp)<input name="telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="300 123 4567" required></label>'+
     '<label>Edad<input name="edad" type="number" inputmode="numeric" min="8" max="99" required></label></div>'+
-    '<fieldset class="cats"><legend>Categoría</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+prize(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
+    '<fieldset class="cats"><legend>Categoría · nivel '+(NIVHOY+1)+' de 4 ('+NIV[NIVHOY][0]+', equivale a '+NIV[NIVHOY][1]+')</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+prize(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
     '<label class="consent"><input type="checkbox" name="acepto"> <span>Autorizo a Caribbean Tennis a usar mis datos solo para gestionar mi inscripción y enviarme información del torneo.</span></label>'+
     '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+'</span></div></form>';
   h+='</div>';
   if(canOrg&&orgOn)h+=orgIns(cfgOpen,cupo);
   h+='</section>';
+  h+='<section id="niveles" class="rv"><div><h2>Niveles del circuito</h2><p class="sub">Caribbean Tennis tiene <strong>4 niveles</strong>, del 1 (entrada) al 4 (el más alto). En la '+NEXT.n+' se juega <strong>'+NIV[NIVHOY][0]+'</strong>, en mujeres y en hombres.</p></div><ol class="ladder">'+
+    NIV.map(function(n,i){return '<li class="lv lv'+(i+1)+(i===NIVHOY?' now':'')+'"><div class="bar"><span class="num">Nivel '+(i+1)+'</span><b>'+n[0]+'</b><small>Equivale a '+n[1]+'</small>'+(i===NIVHOY?'<em>Esta edición</em>':'')+'</div></li>'}).join('')+
+    '</ol><ul class="lvdesc">'+NIV.slice().reverse().map(function(n,k){var i=NIV.length-1-k;return '<li'+(i===NIVHOY?' class="now"':'')+'><b>'+(i+1)+' · '+n[0]+'</b> <span>(equivale a '+n[1]+')</span> — '+n[2]+'</li>'}).join('')+'</ul></section>';
   h+='<section id="pasos" class="rv"><div><h2>Cómo participar</h2></div><ol class="steps3">'+
     '<li><b>1</b><div><h3>Inscríbete</h3><p>Llena el formulario con tus datos y escoge tu categoría.</p></div></li>'+
     '<li><b>2</b><div><h3>Paga tu inscripción</h3><p>'+money(NEXT.precio)+' por transferencia. Al inscribirte te mostramos los datos para pagar. Así aseguras tu cupo.</p></div></li>'+
