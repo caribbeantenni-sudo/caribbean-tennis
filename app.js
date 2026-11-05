@@ -67,7 +67,7 @@ var SS={get:function(k){try{return sessionStorage.getItem(k)}catch(e){return nul
 var me=null; /* la sección Mis partidos se quitó */
 var TABS=[['circuito','Inicio'],['ranking','Ranking'],['p1','1ra Edición'],['inicio','2da Edición']];
 var SUB=[['inicio','Resumen'],['liga','Liga'],['tabla','Tabla y cuadro'],['info','Info']];
-var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
+var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',faq:'circuito',nosotros:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
 var TODAY=(function(){try{var o={};new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value});return o.year+'-'+o.month+'-'+o.day}catch(e){return ''}})();
 var tab=LS.get('ct_tab'); if(['circuito','ranking','p1','inicio','liga','tabla','info'].indexOf(tab)<0)tab='circuito';
 var OPEN={}, INSOPEN=false, RKQ='', RKN=20, FIRST=true;
@@ -275,6 +275,18 @@ function render(){
     '<li><b>1</b><div><h3>Inscríbete</h3><p>Llena el formulario con tus datos y escoge tu categoría.</p></div></li>'+
     '<li><b>2</b><div><h3>Paga tu inscripción</h3><p>'+money(NEXT.precio)+'. La organización te escribe con los datos de pago. Así aseguras tu cupo.</p></div></li>'+
     '<li><b>3</b><div><h3>Juega</h3><p>'+NEXT.dateTxt.replace(' de 2026','')+' en el '+NEXT.place+'. Sigue tus partidos en vivo en esta página.</p></div></li></ol></section>';
+  var FAQ=[
+    ['¿Qué categorías hay?','Dos: <strong>4ta mujeres</strong> y <strong>4ta hombres</strong>, con '+cupo+' cupos cada una. El premio de 4ta mujeres es de $400.000 y el de 4ta hombres se anunciará pronto.'],
+    ['¿Cuánto cuesta y cómo pago?','La inscripción cuesta <strong>'+money(NEXT.precio)+'</strong>. Después de inscribirte, la organización te escribe con los datos de pago. Tu cupo queda asegurado cuando pagas.'],
+    ['¿Cómo es el formato?','Primero hay una <strong>fase de liga</strong> en la que cada jugador juega 2 partidos. Los mejores de la tabla pasan a la <strong>eliminatoria</strong>, que se juega hasta la final de cada categoría. El cuadro exacto depende de cuántos se inscriban en cada categoría.'],
+    ['¿A cuántos puntos se juega?','En la liga se juegan <strong>21 puntos en total</strong> (por ejemplo 13-8). En la eliminatoria gana el primero en llegar a <strong>11</strong>, y la final es a <strong>21</strong>.'],
+    ['¿A qué hora es?','El torneo es el '+NEXT.dateTxt.replace(' de 2026','').toLowerCase()+' en el '+NEXT.place+', de 10:00 a. m. a 6:00 p. m. Antes del torneo publicamos aquí la programación con la hora y la cancha de cada partido, para que no tengas que llegar desde temprano si juegas más tarde.'],
+    ['¿Qué incluye la inscripción?','Hidratación para cada jugador (Electrolit o Hydralyte), agua y fruta, <strong>caddie en todos los partidos</strong>, y resultados, tabla y ranking Elo en vivo en esta página.'],
+    ['¿Qué debo llevar?','Tu raqueta, ropa y zapatos de tenis, gorra y bloqueador. Las bolas las pone la organización.'],
+    ['¿Qué pasa si llueve?','Si la lluvia no deja terminar, la organización reprograma los partidos que falten y avisa por Instagram (@caribeantennis). Los resultados ya jugados se mantienen, como pasó en la 2da edición.'],
+    ['¿Qué pasa si no llego a mi partido?','Si no te presentas cuando te llaman a cancha, pierdes ese partido por W.O. Llega al menos 15 minutos antes de tu hora.']
+  ];
+  h+='<section id="faq" class="rv"><div><h2>Preguntas frecuentes</h2></div><div class="faq">'+FAQ.map(function(x,i){return '<details class="acc" data-acc="faq'+i+'"'+(OPEN['faq'+i]?' open':'')+'><summary><span>'+x[0]+'</span></summary><p>'+x[1]+'</p></details>'}).join('')+'</div></section>';
 
   /* ---------- circuito: ediciones ---------- */
   var F1=P1D.r.filter(function(m){return m[1]==='F'})[0], ch1=F1[4]>F1[5]?F1[2]:F1[3], sb1=ch1===F1[2]?F1[3]:F1[2], sf1=P1D.r.filter(function(m){return m[1]==='S'}).map(function(m){return m[4]>m[5]?m[3]:m[2]});
@@ -433,6 +445,16 @@ function render(){
   })();
   if(RC.length){h+='<section id="records" class="rv"><div class="shead"><h2>Récords del circuito</h2><span class="carnav"><button type="button" class="cbtn" data-car="-1" aria-label="Anterior">‹</button><button type="button" class="cbtn" data-car="1" aria-label="Siguiente">›</button></span></div><p class="sub" style="margin-top:-6px">Contando las dos ediciones. Desliza para ver más.</p><div class="car" id="car">';
     RC.forEach(function(x,i){h+='<div class="hl card'+(i%3)+'"><small>'+x[0]+'</small><b>'+x[1]+'</b><span>'+x[2]+'</span></div>'});h+='</div><div class="cdots">'+RC.map(function(x,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>'}
+  /* quiénes somos */
+  var ORG=[
+    ['MG','Mateo González Ayala','Organizador','18 años · juega tenis desde los 8 · estudia Ciencia de Datos',
+     ['Jugó el <strong>Mundial Juvenil de Tenis</strong>','Top 12 de Colombia y <strong>número 1 de la región Caribe</strong> en todas las categorías','Sumó <strong>puntos ITF</strong> y entró al ranking mundial','Más de <strong>70 títulos</strong> nacionales','Finalista de un <strong>Sudamericano COSAT</strong>','<strong>UTR 10</strong>, nivel que tienen incluso tenistas profesionales','Dos medallas de oro en sus primeros ASCUN regionales','Jugó los <strong>Juegos Nacionales</strong> en Pereira a los 15 años','Medalla de oro en los Intercolegiados regionales']],
+    ['AR','Andrés Rodríguez Ávila','Organizador','21 años · juega tenis desde los 7 · estudia Economía',
+     ['Jugó el <strong>Mundial Juvenil de Tenis</strong>','<strong>Número 1 de la Costa durante 7 años</strong> en la categoría 2005','Más de <strong>100 campeonatos</strong> a nivel nacional','Títulos en el <strong>circuito nacional francés</strong>, con clasificación 5/6','Medallista de oro y plata en todas sus participaciones en los <strong>Juegos ASCUN</strong> regionales (2024, 2025 y 2026)','Ha jugado torneos internacionales avalados por la <strong>ITF</strong>']]
+  ];
+  h+='<section id="nosotros" class="rv"><div><h2>Quiénes somos</h2></div><div class="story"><p>Caribbean Tennis nació de una propuesta de Mateo a Andrés para hacer un torneo. Andrés llevaba tiempo con la misma idea, pero no había encontrado el espacio, así que se pusieron manos a la obra. La primera puerta que se les abrió fue la de la <strong>Liga de Tenis del Atlántico</strong>, en el Parque de Raquetas. Desde entonces se preparan para que cada jugador viva una experiencia distinta y única.</p>'+
+    '<div class="miles"><div><b>26 ago</b><span>Lanzamiento</span></div><div><b>20 sep</b><span>1ra edición</span></div><div><b>25 oct</b><span>2da edición</span></div><div><b>'+(+NEXT.date.split('-')[2])+' dic</b><span>'+NEXT.n+'</span></div></div></div>';
+  h+='<div class="orgs">'+ORG.map(function(o,i){return '<article class="orgc"><div class="orgh"><span class="av">'+o[0]+'</span><div><b>'+o[1]+'</b><small>'+o[2]+' · '+o[3]+'</small></div></div><ul>'+o[4].slice(0,OPEN['org'+i]?99:3).map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+(o[4].length>3?'<button type="button" class="linkbtn" data-more="org'+i+'">'+(OPEN['org'+i]?'Ver menos':'Ver toda la trayectoria')+'</button>':'')+'</article>'}).join('')+'</div></section>';
 
   /* reemplazos (organizador) */
   if(canOrg&&orgOn){

@@ -502,3 +502,28 @@ h1{color:var(--cream)}
 .pod.gold{background:var(--hl);border-color:var(--peach)}
 .cdots i.on{background:var(--court)}
 .prizes b.tbd{font-size:20px;opacity:.9}
+
+/* preguntas frecuentes */
+.faq{display:grid;gap:8px}
+.faq .acc+.acc{margin-top:0}
+.faq .acc summary span{font-weight:700}
+.faq .acc p{margin:0;padding:0 16px 14px;color:var(--muted);max-width:70ch}
+.faq .acc p strong{color:var(--ink)}
+
+/* quiénes somos */
+.story{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:14px}
+.story p{margin:0;max-width:70ch}
+.miles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.miles div{border-top:3px solid var(--lime);padding-top:6px;display:grid}
+.miles b{font-family:var(--display);font-size:22px;font-weight:800;color:var(--court);line-height:1.1}
+.miles span{font-size:12px;color:var(--muted)}
+.orgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.orgc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:10px;align-content:start}
+.orgh{display:flex;gap:12px;align-items:center}
+.orgh b{display:block;font-size:17px}
+.orgh small{color:var(--muted);font-size:13px}
+.av{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(150deg,#0C3C52,#315A4E);color:var(--lime);font-family:var(--display);font-weight:900;font-size:22px}
+.orgc ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.orgc li::marker{color:var(--court)}
+.orgc .linkbtn{justify-self:start}
+@media (max-width:420px){.miles{grid-template-columns:repeat(2,minmax(0,1fr))}}
