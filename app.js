@@ -58,7 +58,7 @@ function pagoBox(fn){var msg=encodeURIComponent('Hola, soy '+(insSent?insSent.n:
   return '<div class="pagobox"><div class="ph">Datos para pagar</div>'+row('Llave',PAGO.llave,PAGO.llave.replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3'))+row('Cuenta Bancolombia',PAGO.cuenta,PAGO.cuenta)+'<div class="prow"><span>A nombre de</span><b>'+PAGO.titular+'</b></div><div class="prow"><span>Valor</span><b>'+money(NEXT.precio)+'</b></div>'+
     '<p>Cuando pagues, envía el comprobante por WhatsApp para confirmar tu cupo.</p><a class="btn primary" href="https://wa.me/'+PAGO.wa+'?text='+msg+'" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a></div>'}
 function prize(v){return v==null?'por definir':money(v)}
-var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{localStorage.removeItem('ct_ins');insSent=JSON.parse(sessionStorage.getItem('ct_ins')||'null')}catch(e){}
+var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{localStorage.removeItem('ct_ins');if(/[?&]pago=/.test(location.search))insSent=JSON.parse(sessionStorage.getItem('ct_ins')||'null');else sessionStorage.removeItem('ct_ins')}catch(e){}
 function daysTo(d){if(!TODAY)return null;var a=TODAY.split('-'),b=d.split('-');return Math.round((Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/864e5)}
 function money(n){return '$'+n.toLocaleString('es-CO')}
 /* reemplazos: el jugador nuevo toma el cupo y hereda el resultado del 25 oct; ese partido cuenta en el Elo del jugador original */
