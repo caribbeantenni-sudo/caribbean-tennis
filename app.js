@@ -64,7 +64,7 @@ function eloName(p,id){if(p&&FX.reps[p]&&id[0]==='L'&&d1(S[+id.slice(1)-1]))retu
 var root=document.getElementById('root');
 var LS={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 var SS={get:function(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},del:function(k){try{sessionStorage.removeItem(k)}catch(e){}}};
-var me=LS.get('ct2_me'); if(me&&!ELO.hasOwnProperty(me))me=null;
+var me=null; /* la sección Mis partidos se quitó */
 var TABS=[['circuito','Inicio'],['ranking','Ranking'],['p1','1ra Edición'],['inicio','2da Edición']];
 var SUB=[['inicio','Resumen'],['liga','Liga'],['tabla','Tabla y cuadro'],['info','Info']];
 var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
@@ -327,25 +327,6 @@ function render(){
     h+='<div class="pod"><small>Semifinalistas</small><b>'+semis.map(nm).join('<br>')+'</b></div></div>';
     h+='<div class="rk"><h3>Ranking Elo actualizado · top 10</h3><ol>'+rk.map(function(p){var d=E.R[p]-ELO[p];return '<li><span>'+nm(p)+'</span><span><strong>'+f2(E.R[p])+'</strong> <em class="'+(d>=0?'up':'dn')+'">'+sgn(d,1)+'</em></span></li>'}).join('')+'</ol><p class="sub" style="margin:0">Provisional hasta que la organización publique el ranking oficial.</p></div></section>';
   }
-
-  /* mis partidos */
-  h+='<section id="mis"><div><h2>Mis partidos</h2></div><div class="mine-card">';
-  if(!me){
-    h+='<div class="row"><label for="q">¿Quién eres?</label><input id="q" list="plist" placeholder="Escribe tu nombre" autocomplete="off"></div><datalist id="plist">'+PLAYERS.slice().sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('')+'</datalist><div class="sub" id="qmsg">Elige tu nombre de la lista y la página lo recordará en este celular.</div>';
-  } else {
-    var dme=E.R[me]-ELO[me], nd='';
-    h+='<div class="row" style="justify-content:space-between"><h3>'+nm(me)+'</h3><span><button class="linkbtn" data-p="'+esc(me)+'">Ver mi ficha</button> · <button class="linkbtn" id="chg">Cambiar</button></span></div>';
-    h+='<div class="sub" style="margin:0">Posición: <strong>'+posOf[me]+'°</strong> de 44 · Elo <strong>'+f2(E.R[me])+'</strong>'+(Math.abs(dme)>0.004?' <em class="'+(dme>=0?'up':'dn')+'">'+sgn(dme,2)+'</em>':'')+(checkStarted()?' · '+(ST.here[me]?'Llegada confirmada':'<strong>Confirma tu llegada en la mesa</strong>'):'')+'</div>'+(nd?'<div class="needbox">'+nd+'</div>':'')+'<div class="mylist">';
-    var mine=[];S.forEach(function(m){if(m[3]===me||m[4]===me)mine.push('L'+m[0])});
-    if(ST.close)Object.keys(KOBY).forEach(function(k){var p=players(k);if(p[0]===me||p[1]===me)mine.push(k)});
-    mine.forEach(function(id){var p=players(id),r=ST.r[id],sc=schedOf(id),isA=p[0]===me,riv=isA?p[1]:p[0];
-      var ref=isA?(id[0]==='L'?null:KOBY[id].b):(id[0]==='L'?null:KOBY[id].a);
-      var my=r?(isA?r.a:r.b):null, th=r?(isA?r.b:r.a):null, ed=(FX.reps[me]&&id[0]==='L'&&d1(S[+id.slice(1)-1]))?null:E.md[id];
-      h+='<div class="my"><span class="when">'+'Turno '+turnOf(id)+' <em class="aprox">'+whenOf(id)+'</em></span><span>'+CN[sc.c]+' · '+labelOf(id)+'</span><span>vs '+(riv?nm(riv):'<em>'+slotLabel(ref)+'</em>')+'</span>'+
-        (r?'<span class="res '+(my>th?'w':'l')+'">'+(my>th?'Ganaste ':'Perdiste ')+my+'-'+th+(r.wo?' (W.O.)':'')+(ed?' · Elo '+sgn(isA?ed.a:ed.b,1):'')+'</span>':'<span class="sub" style="margin:0">'+(parcTxt(id)?esc(parcTxt(id)):'Por jugar')+'</span>')+'</div>'});
-    h+='</div>';
-  }
-  h+='</div></section>';
 
   /* siguen */
   if(ups.length){
