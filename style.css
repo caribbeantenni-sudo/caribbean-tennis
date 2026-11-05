@@ -503,13 +503,6 @@ h1{color:var(--cream)}
 .cdots i.on{background:var(--court)}
 .prizes b.tbd{font-size:20px;opacity:.9}
 
-/* preguntas frecuentes */
-.faq{display:grid;gap:8px}
-.faq .acc+.acc{margin-top:0}
-.faq .acc summary span{font-weight:700}
-.faq .acc p{margin:0;padding:0 16px 14px;color:var(--muted);max-width:70ch}
-.faq .acc p strong{color:var(--ink)}
-
 /* quiénes somos */
 .story{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:14px}
 .story p{margin:0;max-width:70ch}
@@ -527,3 +520,12 @@ h1{color:var(--cream)}
 .orgc li::marker{color:var(--court)}
 .orgc .linkbtn{justify-self:start}
 @media (max-width:420px){.miles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pagobox{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;margin-top:6px}
+.pagobox .ph{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--court)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:6px}
+.prow span{color:var(--muted);font-size:13px}
+.prow b{font-size:16px;font-variant-numeric:tabular-nums}
+.prow:not(:has(button)){grid-template-columns:minmax(0,1fr) auto}
+.pagobox p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.pagobox .btn{text-decoration:none;text-align:center;justify-self:start}
+.btn.sm{padding:5px 10px;font-size:13px}

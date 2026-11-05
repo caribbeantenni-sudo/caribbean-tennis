@@ -50,8 +50,13 @@ function allMatches(E){var out=[];
   L2.forEach(function(id){var r=ST.r[id];if(!r||r.wo)return;var pp=players(id);if(!pp[0]||!pp[1])return;var md=E.md[id];out.push({ed:2,lab:labelOf(id)+' · 2da Edición',a:eloName(pp[0],id),b:eloName(pp[1],id),sa:r.a,sb:r.b,ea:md?md.ea:null,id:id})});
   return out}
 /* ---------- 3ra edición e inscripciones ---------- */
+var PAGO={llave:'3225756567',cuenta:'91201825631',titular:'Mateo González',wa:'573225756567'};
 var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:110000,cats:[['4ta-mujeres','4ta mujeres',400000],['4ta-hombres','4ta hombres',null]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
 function catName(k){var x=NEXT.cats.filter(function(c){return c[0]===k})[0];return x?x[1]:({'3ra':'3ra categoría','4ta':'4ta categoría'}[k]||k)}
+function pagoBox(fn){var msg=encodeURIComponent('Hola, soy '+(insSent?insSent.n:'')+'. Me inscribí en '+catName(insSent?insSent.c:'')+' de la '+NEXT.n+' de Caribbean Tennis. Aquí va mi comprobante de pago.');
+  var row=function(k,v,show){return '<div class="prow"><span>'+k+'</span><b>'+show+'</b><button type="button" class="btn sm" data-copy="'+v+'">Copiar</button></div>'};
+  return '<div class="pagobox"><div class="ph">Datos para pagar</div>'+row('Llave',PAGO.llave,PAGO.llave.replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3'))+row('Cuenta Bancolombia',PAGO.cuenta,PAGO.cuenta)+'<div class="prow"><span>A nombre de</span><b>'+PAGO.titular+'</b></div><div class="prow"><span>Valor</span><b>'+money(NEXT.precio)+'</b></div>'+
+    '<p>Cuando pagues, envía el comprobante por WhatsApp para confirmar tu cupo.</p><a class="btn primary" href="https://wa.me/'+PAGO.wa+'?text='+msg+'" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a></div>'}
 function prize(v){return v==null?'por definir':money(v)}
 var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{localStorage.removeItem('ct_ins');insSent=JSON.parse(sessionStorage.getItem('ct_ins')||'null')}catch(e){}
 function daysTo(d){if(!TODAY)return null;var a=TODAY.split('-'),b=d.split('-');return Math.round((Date.UTC(+b[0],b[1]-1,+b[2])-Date.UTC(+a[0],a[1]-1,+a[2]))/864e5)}
@@ -67,7 +72,7 @@ var SS={get:function(k){try{return sessionStorage.getItem(k)}catch(e){return nul
 var me=null; /* la sección Mis partidos se quitó */
 var TABS=[['circuito','Inicio'],['ranking','Ranking'],['p1','1ra Edición'],['inicio','2da Edición']];
 var SUB=[['inicio','Resumen'],['liga','Liga'],['tabla','Tabla y cuadro'],['info','Info']];
-var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',faq:'circuito',nosotros:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
+var TABOF={panel:'inicio',resumen:'inicio',mis:'inicio',siguen:'inicio',destacados:'inicio',asistencia:'inicio',liga:'liga',tabla:'tabla',cuadro:'tabla',reglas:'info',patrocinadores:'info',lugar:'info',elo:'ranking',paradas:'circuito',proxima:'circuito',puntos:'circuito',records:'circuito',pasos:'circuito',nosotros:'circuito',top3:'circuito',p1res:'p1',p1tabla:'p1',p1cuadro:'p1',p1rondas:'p1',horas:'inicio',reemplazos:'inicio'};
 var TODAY=(function(){try{var o={};new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value});return o.year+'-'+o.month+'-'+o.day}catch(e){return ''}})();
 var tab=LS.get('ct_tab'); if(['circuito','ranking','p1','inicio','liga','tabla','info'].indexOf(tab)<0)tab='circuito';
 var OPEN={}, INSOPEN=false, RKQ='', RKN=20, FIRST=true;
@@ -257,7 +262,7 @@ function render(){
   else if(insSent){var fn=esc(String(insSent.n).split(' ')[0]),paid=!!insSent.paid,canPay=!!(insSent.ref&&C.wompiPublicKey);
     h+='<div class="insok'+(paid?'':' due')+'"><b>'+(paid?'¡Pago confirmado, '+fn+'! Tu cupo en '+esc(catName(insSent.c))+' está asegurado.':'¡Listo, '+fn+'! Tu inscripción en '+esc(catName(insSent.c))+' quedó registrada.')+'</b>'+
       (paid?'<span>Te esperamos el '+NEXT.dateTxt.charAt(0).toLowerCase()+NEXT.dateTxt.slice(1)+' en el '+NEXT.place+'.</span>':
-        '<span>Para asegurar tu cupo paga la inscripción: <strong>'+money(NEXT.precio)+'</strong>. '+(canPay?'Puedes pagar con Nequi, PSE, Bancolombia o tarjeta.':'La organización te va a escribir con los datos de pago.')+'</span>'+
+        '<span>Para asegurar tu cupo paga la inscripción: <strong>'+money(NEXT.precio)+'</strong>. '+(canPay?'Puedes pagar con Nequi, PSE, Bancolombia o tarjeta.':'')+'</span>'+(canPay?'':pagoBox(fn))+
         (canPay?'<div class="nacts"><button type="button" class="btn primary" id="payBtn">Pagar '+money(NEXT.precio)+'</button></div><div class="insmsg" id="payMsg" aria-live="polite"></div>':''))+
       '<button type="button" class="linkbtn" id="insAgain" style="justify-self:start">Inscribir a otra persona</button></div>'}
   else h+='<form class="insform" id="insF" novalidate><div><h3 class="rhead">Inscríbete</h3><p class="sub" style="margin:2px 0 0">Llena tus datos y escoge tu categoría. Tus datos solo los ve la organización.</p></div>'+
@@ -273,20 +278,8 @@ function render(){
   h+='</section>';
   h+='<section id="pasos" class="rv"><div><h2>Cómo participar</h2></div><ol class="steps3">'+
     '<li><b>1</b><div><h3>Inscríbete</h3><p>Llena el formulario con tus datos y escoge tu categoría.</p></div></li>'+
-    '<li><b>2</b><div><h3>Paga tu inscripción</h3><p>'+money(NEXT.precio)+'. La organización te escribe con los datos de pago. Así aseguras tu cupo.</p></div></li>'+
+    '<li><b>2</b><div><h3>Paga tu inscripción</h3><p>'+money(NEXT.precio)+' por transferencia. Al inscribirte te mostramos los datos para pagar. Así aseguras tu cupo.</p></div></li>'+
     '<li><b>3</b><div><h3>Juega</h3><p>'+NEXT.dateTxt.replace(' de 2026','')+' en el '+NEXT.place+'. Sigue tus partidos en vivo en esta página.</p></div></li></ol></section>';
-  var FAQ=[
-    ['¿Qué categorías hay?','Dos: <strong>4ta mujeres</strong> y <strong>4ta hombres</strong>, con '+cupo+' cupos cada una. El premio de 4ta mujeres es de $400.000 y el de 4ta hombres se anunciará pronto.'],
-    ['¿Cuánto cuesta y cómo pago?','La inscripción cuesta <strong>'+money(NEXT.precio)+'</strong>. Después de inscribirte, la organización te escribe con los datos de pago. Tu cupo queda asegurado cuando pagas.'],
-    ['¿Cómo es el formato?','Primero hay una <strong>fase de liga</strong> en la que cada jugador juega 2 partidos. Los mejores de la tabla pasan a la <strong>eliminatoria</strong>, que se juega hasta la final de cada categoría. El cuadro exacto depende de cuántos se inscriban en cada categoría.'],
-    ['¿A cuántos puntos se juega?','En la liga se juegan <strong>21 puntos en total</strong> (por ejemplo 13-8). En la eliminatoria gana el primero en llegar a <strong>11</strong>, y la final es a <strong>21</strong>.'],
-    ['¿A qué hora es?','El torneo es el '+NEXT.dateTxt.replace(' de 2026','').toLowerCase()+' en el '+NEXT.place+', de 10:00 a. m. a 6:00 p. m. Antes del torneo publicamos aquí la programación con la hora y la cancha de cada partido, para que no tengas que llegar desde temprano si juegas más tarde.'],
-    ['¿Qué incluye la inscripción?','Hidratación para cada jugador (Electrolit o Hydralyte), agua y fruta, <strong>caddie en todos los partidos</strong>, y resultados, tabla y ranking Elo en vivo en esta página.'],
-    ['¿Qué debo llevar?','Tu raqueta, ropa y zapatos de tenis, gorra y bloqueador. Las bolas las pone la organización.'],
-    ['¿Qué pasa si llueve?','Si la lluvia no deja terminar, la organización reprograma los partidos que falten y avisa por Instagram (@caribeantennis). Los resultados ya jugados se mantienen, como pasó en la 2da edición.'],
-    ['¿Qué pasa si no llego a mi partido?','Si no te presentas cuando te llaman a cancha, pierdes ese partido por W.O. Llega al menos 15 minutos antes de tu hora.']
-  ];
-  h+='<section id="faq" class="rv"><div><h2>Preguntas frecuentes</h2></div><div class="faq">'+FAQ.map(function(x,i){return '<details class="acc" data-acc="faq'+i+'"'+(OPEN['faq'+i]?' open':'')+'><summary><span>'+x[0]+'</span></summary><p>'+x[1]+'</p></details>'}).join('')+'</div></section>';
 
   /* ---------- circuito: ediciones ---------- */
   var F1=P1D.r.filter(function(m){return m[1]==='F'})[0], ch1=F1[4]>F1[5]?F1[2]:F1[3], sb1=ch1===F1[2]?F1[3]:F1[2], sf1=P1D.r.filter(function(m){return m[1]==='S'}).map(function(m){return m[4]>m[5]?m[3]:m[2]});
@@ -606,6 +599,7 @@ function applyTab(){
 function setTab(t,scroll){tab=t;LS.set('ct_tab',t);applyTab();if(scroll){var n=root.querySelector('.tabs');if(n&&window.scrollY>n.offsetTop)window.scrollTo(0,n.offsetTop)}}
 function bind(){
   applyTab();
+  root.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-copy'),ok=function(){b.textContent='Copiado';setTimeout(function(){b.textContent='Copiar'},1500)};if(navigator.clipboard)navigator.clipboard.writeText(v).then(ok,function(){toast(v,4000)});else toast(v,4000)}});
   var oi=document.getElementById('openIns');if(oi)oi.onclick=function(){if(insSent){insSent=null;try{sessionStorage.removeItem('ct_ins')}catch(e){}INSOPEN=true}else INSOPEN=!INSOPEN;keepRender();if(INSOPEN){var f=document.getElementById('inscripcion');if(f){f.scrollIntoView({block:'start',behavior:smooth()});var n=f.querySelector('input[name=nombre]');if(n)setTimeout(function(){n.focus({preventScroll:true})},350)}}};
   root.querySelectorAll('[data-more]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-more');OPEN[k]=!OPEN[k];var w=b.previousElementSibling;if(w&&w.classList.contains('clip'))w.classList.toggle('open',!!OPEN[k]);var y=b.getBoundingClientRect().top;keepRender();if(!OPEN[k]){var s=b.closest('section');if(s)s.scrollIntoView({block:'start'})}}});
   root.querySelectorAll('details[data-acc]').forEach(function(d){d.addEventListener('toggle',function(){OPEN[d.getAttribute('data-acc')]=d.open})});
