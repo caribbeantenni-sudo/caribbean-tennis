@@ -52,7 +52,7 @@ function allMatches(E){var out=[];
 /* ---------- 3ra edición e inscripciones ---------- */
 var PAGO={llave:'3225756567',cuenta:'91201825631',titular:'Mateo González',wa:'573225756567'};
 var NIV=[['Future','4ta','Nivel de entrada. Para quienes están empezando a competir.'],['Challenger','3ra','Nivel intermedio. Juegas partidos seguido y quieres dar el salto.'],['Masters','2da','Nivel avanzado. Golpes sólidos y experiencia en torneos.'],['Grand Slam','1ra','El nivel más alto del circuito.']], NIVHOY=0;
-var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:110000,cats:[['4ta-mujeres','Future mujeres',400000],['4ta-hombres','Future hombres',null]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
+var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:110000,cats:[['4ta-mujeres','Future mujeres',400000],['4ta-hombres','Future hombres',700000]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
 function catName(k){var x=NEXT.cats.filter(function(c){return c[0]===k})[0];return x?x[1]:({'3ra':'3ra categoría','4ta':'4ta categoría'}[k]||k)}
 function pagoBox(fn){var msg=encodeURIComponent('Hola, soy '+(insSent?insSent.n:'')+'. Me inscribí en '+catName(insSent?insSent.c:'')+' de la '+NEXT.n+' de Caribbean Tennis. Aquí va mi comprobante de pago.');
   var row=function(k,v,show){return '<div class="prow"><span>'+k+'</span><b>'+show+'</b><button type="button" class="btn sm" data-copy="'+v+'">Copiar</button></div>'};
