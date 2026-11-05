@@ -50,7 +50,7 @@ function allMatches(E){var out=[];
   L2.forEach(function(id){var r=ST.r[id];if(!r||r.wo)return;var pp=players(id);if(!pp[0]||!pp[1])return;var md=E.md[id];out.push({ed:2,lab:labelOf(id)+' · 2da Edición',a:eloName(pp[0],id),b:eloName(pp[1],id),sa:r.a,sb:r.b,ea:md?md.ea:null,id:id})});
   return out}
 /* ---------- 3ra edición e inscripciones ---------- */
-var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:112000,cats:[['4ta-mujeres','4ta mujeres',400000],['4ta-hombres','4ta hombres',null]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
+var NEXT={n:'3ra Edición',date:'2026-12-13',dateTxt:'Domingo 13 de diciembre de 2026',place:'Parque de Raquetas',city:'Barranquilla',fee:110000,precio:110000,cats:[['4ta-mujeres','4ta mujeres',400000],['4ta-hombres','4ta hombres',null]],maps:'https://www.google.com/maps/search/?api=1&query=Parque+de+Raquetas+Barranquilla'};
 function catName(k){var x=NEXT.cats.filter(function(c){return c[0]===k})[0];return x?x[1]:({'3ra':'3ra categoría','4ta':'4ta categoría'}[k]||k)}
 function prize(v){return v==null?'por definir':money(v)}
 var INSROWS=null, INSCFG=null, LLENAS={}, insFilter='', insSent=null; try{localStorage.removeItem('ct_ins');insSent=JSON.parse(sessionStorage.getItem('ct_ins')||'null')}catch(e){}
@@ -257,7 +257,7 @@ function render(){
   else if(insSent){var fn=esc(String(insSent.n).split(' ')[0]),paid=!!insSent.paid,canPay=!!(insSent.ref&&C.wompiPublicKey);
     h+='<div class="insok'+(paid?'':' due')+'"><b>'+(paid?'¡Pago confirmado, '+fn+'! Tu cupo en '+esc(catName(insSent.c))+' está asegurado.':'¡Listo, '+fn+'! Tu inscripción en '+esc(catName(insSent.c))+' quedó registrada.')+'</b>'+
       (paid?'<span>Te esperamos el '+NEXT.dateTxt.charAt(0).toLowerCase()+NEXT.dateTxt.slice(1)+' en el '+NEXT.place+'.</span>':
-        '<span>Para asegurar tu cupo paga la inscripción: <strong>'+money(NEXT.precio)+'</strong> ($110.000 + $2.000 de comisión). '+(canPay?'Puedes pagar con Nequi, PSE, Bancolombia o tarjeta.':'La organización te va a escribir con los datos de pago.')+'</span>'+
+        '<span>Para asegurar tu cupo paga la inscripción: <strong>'+money(NEXT.precio)+'</strong>. '+(canPay?'Puedes pagar con Nequi, PSE, Bancolombia o tarjeta.':'La organización te va a escribir con los datos de pago.')+'</span>'+
         (canPay?'<div class="nacts"><button type="button" class="btn primary" id="payBtn">Pagar '+money(NEXT.precio)+'</button></div><div class="insmsg" id="payMsg" aria-live="polite"></div>':''))+
       '<button type="button" class="linkbtn" id="insAgain" style="justify-self:start">Inscribir a otra persona</button></div>'}
   else h+='<form class="insform" id="insF" novalidate><div><h3 class="rhead">Inscríbete</h3><p class="sub" style="margin:2px 0 0">Llena tus datos y escoge tu categoría. Tus datos solo los ve la organización.</p></div>'+
@@ -267,13 +267,13 @@ function render(){
     '<label>Edad<input name="edad" type="number" inputmode="numeric" min="8" max="99" required></label></div>'+
     '<fieldset class="cats"><legend>Categoría</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+prize(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
     '<label class="consent"><input type="checkbox" name="acepto"> <span>Autorizo a Caribbean Tennis a usar mis datos solo para gestionar mi inscripción y enviarme información del torneo.</span></label>'+
-    '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+' ($110.000 + $2.000 de comisión del pago en línea)</span></div></form>';
+    '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+'</span></div></form>';
   h+='</div>';
   if(canOrg&&orgOn)h+=orgIns(cfgOpen,cupo);
   h+='</section>';
   h+='<section id="pasos" class="rv"><div><h2>Cómo participar</h2></div><ol class="steps3">'+
     '<li><b>1</b><div><h3>Inscríbete</h3><p>Llena el formulario con tus datos y escoge tu categoría.</p></div></li>'+
-    '<li><b>2</b><div><h3>Paga en línea</h3><p>'+money(NEXT.precio)+' con Nequi, PSE, Bancolombia o tarjeta. Así aseguras tu cupo.</p></div></li>'+
+    '<li><b>2</b><div><h3>Paga tu inscripción</h3><p>'+money(NEXT.precio)+'. La organización te escribe con los datos de pago. Así aseguras tu cupo.</p></div></li>'+
     '<li><b>3</b><div><h3>Juega</h3><p>'+NEXT.dateTxt.replace(' de 2026','')+' en el '+NEXT.place+'. Sigue tus partidos en vivo en esta página.</p></div></li></ol></section>';
 
   /* ---------- circuito: ediciones ---------- */
