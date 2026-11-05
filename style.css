@@ -562,3 +562,7 @@ h1{color:var(--cream)}
   .lvdesc{display:none}
   .lv small{white-space:nowrap}
 }
+
+/* niveles: 1 (más alto) a la izquierda / arriba */
+.lv4{order:1}.lv3{order:2}.lv2{order:3}.lv1{order:4}
+@media (max-width:560px){.lv .bar{grid-template-columns:auto 1fr;align-items:baseline}.lv .num{grid-row:1;grid-column:1}.lv b{grid-row:1;grid-column:2}.lv1 .bar{margin-top:12px}}

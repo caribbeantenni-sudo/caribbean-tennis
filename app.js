@@ -271,15 +271,14 @@ function render(){
     '<label>Correo electrónico<input name="correo" type="email" autocomplete="email" maxlength="120" required></label>'+
     '<label>Teléfono (WhatsApp)<input name="telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="300 123 4567" required></label>'+
     '<label>Edad<input name="edad" type="number" inputmode="numeric" min="8" max="99" required></label></div>'+
-    '<fieldset class="cats"><legend>Categoría · nivel '+(NIVHOY+1)+' de 4 ('+NIV[NIVHOY][0]+', equivale a '+NIV[NIVHOY][1]+')</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+prize(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
+    '<fieldset class="cats"><legend>Categoría · '+NIV[NIVHOY][0]+' (nivel '+(NIV.length-NIVHOY)+')</legend>'+NEXT.cats.map(function(c){var f=LLENAS[c[0]];return '<label class="cat'+(f?' full':'')+'"><input type="radio" name="categoria" value="'+c[0]+'"'+(f?' disabled':'')+'><span><b>'+c[1]+'</b><span>Premio '+prize(c[2])+(f?' · Categoría llena':'')+'</span></span></label>'}).join('')+'</fieldset>'+
     '<label class="consent"><input type="checkbox" name="acepto"> <span>Autorizo a Caribbean Tennis a usar mis datos solo para gestionar mi inscripción y enviarme información del torneo.</span></label>'+
     '<div class="insmsg" id="insMsg" aria-live="polite"></div><div class="nacts" style="align-items:center"><button class="btn primary" type="submit" id="insBtn">Inscribirme</button><span class="sub" style="margin:0">Valor: '+money(NEXT.precio)+'</span></div></form>';
   h+='</div>';
   if(canOrg&&orgOn)h+=orgIns(cfgOpen,cupo);
   h+='</section>';
-  h+='<section id="niveles" class="rv"><div><h2>Niveles del circuito</h2><p class="sub">Caribbean Tennis tiene <strong>4 niveles</strong>, del 1 (entrada) al 4 (el más alto). En la '+NEXT.n+' se juega <strong>'+NIV[NIVHOY][0]+'</strong>, en mujeres y en hombres.</p></div><ol class="ladder">'+
-    NIV.map(function(n,i){return '<li class="lv lv'+(i+1)+(i===NIVHOY?' now':'')+'"><div class="bar"><span class="num">Nivel '+(i+1)+'</span><b>'+n[0]+'</b><small>Equivale a '+n[1]+'</small>'+(i===NIVHOY?'<em>Esta edición</em>':'')+'</div></li>'}).join('')+
-    '</ol><ul class="lvdesc">'+NIV.slice().reverse().map(function(n,k){var i=NIV.length-1-k;return '<li'+(i===NIVHOY?' class="now"':'')+'><b>'+(i+1)+' · '+n[0]+'</b> <span>(equivale a '+n[1]+')</span> — '+n[2]+'</li>'}).join('')+'</ul></section>';
+  h+='<section id="niveles" class="rv"><div><h2>Niveles del circuito</h2><p class="sub">Del nivel 1 (el más alto) al 4.</p></div><ol class="ladder">'+
+    NIV.map(function(n,i){return '<li class="lv lv'+(i+1)+(i===NIVHOY?' now':'')+'"><div class="bar"><span class="num">Nivel '+(NIV.length-i)+'</span><b>'+n[0]+'</b>'+(i===NIVHOY?'<em>Esta edición</em>':'')+'</div></li>'}).join('')+'</ol></section>';
   h+='<section id="pasos" class="rv"><div><h2>Cómo participar</h2></div><ol class="steps3">'+
     '<li><b>1</b><div><h3>Inscríbete</h3><p>Llena el formulario con tus datos y escoge tu categoría.</p></div></li>'+
     '<li><b>2</b><div><h3>Paga tu inscripción</h3><p>'+money(NEXT.precio)+' por transferencia. Al inscribirte te mostramos los datos para pagar. Así aseguras tu cupo.</p></div></li>'+
