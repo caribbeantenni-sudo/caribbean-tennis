@@ -529,3 +529,7 @@ h1{color:var(--cream)}
 .pagobox p{margin:2px 0 0;color:var(--muted);font-size:14px}
 .pagobox .btn{text-decoration:none;text-align:center;justify-self:start}
 .btn.sm{padding:5px 10px;font-size:13px}
+.orgc{padding:0;overflow:hidden}
+.orgc>:not(.orgph){margin-inline:18px}
+.orgc>:last-child{margin-bottom:16px}
+.orgph{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
