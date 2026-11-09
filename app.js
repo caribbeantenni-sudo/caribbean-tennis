@@ -487,9 +487,9 @@ function render(){
 
   /* organizer bar */
   if(canOrg){
-    h+='<div class="orgbar"><div class="wrap"><span style="display:flex;gap:10px;align-items:center"><label class="switch"><input type="checkbox" id="orgsw"'+(orgOn?' checked':'')+'> Modo organizador</label><button type="button" class="btn sm" id="orgOut">Cerrar sesión</button></span>';
+    h+='<div class="orgbar"><div class="wrap"><span style="display:flex;gap:10px;align-items:center"><label class="switch"><input type="checkbox" id="orgsw"'+(orgOn?' checked':'')+'> Modo organizador</label><button type="button" class="btn sm" id="orgOut">Cerrar sesión</button>'+syncHTML()+'</span>';
     if(orgOn){
-      h+='<span class="st">Inscripciones de la '+NEXT.n+': en la pestaña Circuito. Resultados de la 2da: toca un partido.</span>';
+      h+='<span class="st">Inscripciones de la '+NEXT.n+': en la pestaña Inicio. Resultados de la 2da: toca un partido.</span>';
       h+=ST.close?'<button class="btn" id="reopen"'+(koDone?' disabled title="Ya hay resultados de eliminatoria"':'')+'>Reabrir liga</button>':'<button class="btn primary" id="closeL">Cerrar liga y armar cuadro</button>';
     }
     h+='</div></div>';
@@ -742,16 +742,39 @@ function dependsOn(id){var dep=false;Object.keys(KOBY).forEach(function(k){var x
 /* ---------- guardar en la base de datos ---------- */
 function fxOut(){var o={};Object.keys(FX).forEach(function(k){if(k!=='logo')o[k]=FX[k]});return o}
 function toast(t,ms){var o=document.querySelector('.toast');if(o)o.remove();var d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);if(ms!==0)setTimeout(function(){d.remove()},ms||4000)}
+/* ---------- guardado a prueba de mala señal ----------
+   Si no hay conexión, el cambio queda guardado en este celular (ct_pending) y se envía solo
+   cuando vuelve la señal. Mientras haya algo pendiente, no se pisa con datos que lleguen de afuera. */
+var PEND=null,flushing=false,SYNC='ok';
+try{PEND=JSON.parse(localStorage.getItem('ct_pending')||'null')}catch(e){}
+function setPend(p){PEND=p;try{if(p)localStorage.setItem('ct_pending',JSON.stringify(p));else localStorage.removeItem('ct_pending')}catch(e){}syncUI()}
+function isAuthErr(e){return /jwt|auth|permission|row-level|security|401|403/i.test(String(e&&(e.message||e.code||e)))}
+function markFx(rows){rows.forEach(function(r){if(r.key==='fx')window.__BOOTFX=JSON.stringify(r.value)})}
+function mergeRows(a,b){var m={};a.concat(b).forEach(function(r){m[r.key]=r});return Object.keys(m).map(function(k){return m[k]})}
+function syncTxt(){return PEND?['off','Sin señal: tus cambios están guardados en este celular y se envían solos']:SYNC==='sending'?['go','Enviando…']:['ok','Todo enviado']}
+function syncHTML(){var t=syncTxt();return '<span id="syncst" class="sync '+t[0]+'" role="status" aria-live="polite">'+t[1]+'</span>'}
+function syncUI(){var el=document.getElementById('syncst');if(!el)return;var t=syncTxt();el.className='sync '+t[0];el.textContent=t[1]}
+function flush(){if(!PEND||flushing)return;flushing=true;SYNC='sending';syncUI();var mine=PEND;
+  DB.saveKV(mine.rows).then(function(){flushing=false;markFx(mine.rows);SYNC='ok';if(PEND===mine)setPend(null);else syncUI();toast('Cambios enviados',2500)})
+  .catch(function(e){flushing=false;SYNC='ok';syncUI();if(isAuthErr(e))toast('Tu sesión expiró: vuelve a entrar como organizador. Tus cambios siguen guardados en este celular.',6000)})}
+function applyRows(rows){rows.forEach(function(r){
+  if(r.key==='st'){ST=JSON.parse(JSON.stringify(r.value));if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={}}
+  if(r.key==='fx'){Object.keys(r.value).forEach(function(k){FX[k]=r.value[k]});S=FX.s;ELO=FX.elo;SEED=FX.seed;PLAYERS=Object.keys(ELO)}})}
 function save(prev,msg,prevFX){
   if(busy)return;busy=true;
   document.querySelectorAll('.modal').forEach(function(m){m.remove()});
   ST.at=new Date().toISOString();
-  keepRender();toast('Guardando…',0);
   var rows=[{key:'st',value:ST}];if(prevFX||!window.__SEEDED)rows.push({key:'fx',value:fxOut()});
-  DB.saveKV(rows).then(function(){busy=false;window.__SEEDED=true;keepRender();toast(msg,2500)}).catch(function(e){
-    busy=false;ST=JSON.parse(prev);if(prevFX){var o=JSON.parse(prevFX);Object.keys(o).forEach(function(k){FX[k]=o[k]});S=FX.s;ELO=FX.elo;SEED=FX.seed;PLAYERS=Object.keys(ELO)}
-    keepRender();
-    toast(/jwt|auth|permission|row-level|security/i.test(String(e&&e.message))?'Tu sesión expiró o no tienes permiso. Vuelve a entrar como organizador.':'No se pudo guardar. Revisa la conexión e inténtalo de nuevo.',6000);
+  rows=JSON.parse(JSON.stringify(rows));
+  if(PEND){busy=false;window.__SEEDED=true;setPend({rows:mergeRows(PEND.rows,rows),at:Date.now()});keepRender();toast('Sin señal: el cambio quedó guardado en este celular',3000);flush();return}
+  keepRender();toast('Guardando…',0);SYNC='sending';syncUI();
+  DB.saveKV(rows).then(function(){busy=false;SYNC='ok';markFx(rows);window.__SEEDED=true;keepRender();toast(msg,2500)}).catch(function(e){
+    busy=false;SYNC='ok';
+    if(isAuthErr(e)){
+      ST=JSON.parse(prev);if(prevFX){var o=JSON.parse(prevFX);Object.keys(o).forEach(function(k){FX[k]=o[k]});S=FX.s;ELO=FX.elo;SEED=FX.seed;PLAYERS=Object.keys(ELO)}
+      keepRender();toast('Tu sesión expiró o no tienes permiso. Vuelve a entrar como organizador.',6000);return}
+    window.__SEEDED=true;setPend({rows:rows,at:Date.now()});keepRender();
+    toast('Sin señal: el cambio quedó guardado en este celular y se envía solo cuando vuelva la conexión.',5000);
   });
 }
 
@@ -759,9 +782,23 @@ function save(prev,msg,prevFX){
 render();
 var sy=SS.get('ct2_scroll'), sm=SS.get('ct2_msg');
 if(sy){SS.del('ct2_scroll');window.scrollTo(0,+sy)} if(sm){SS.del('ct2_msg');toast(sm,2500)}
-window.__applyST=function(st){if(!st||JSON.stringify(st)===JSON.stringify(ST))return;ST=st;if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={};if(!typing()&&!document.querySelector('.modal'))keepRender()};
-setInterval(function(){var ae=document.activeElement;if(document.querySelector('.modal')||busy||draftHere||(ae&&(ae.tagName==='INPUT'||ae.tagName==='SELECT'))||typing())return;
-  DB.loadKV(['st']).then(function(kv){if(kv.st&&JSON.stringify(kv.st)!==JSON.stringify(ST)){ST=kv.st;if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={}}keepRender()})},60000);
+window.__applyST=function(st){if(PEND||!st||JSON.stringify(st)===JSON.stringify(ST))return;ST=st;if(!ST.r)ST.r={};if(!ST.here)ST.here={};if(!ST.t)ST.t={};if(!typing()&&!document.querySelector('.modal'))keepRender()};
+/* ---------- en vivo ----------
+   1) Supabase avisa al instante cuando cambian los resultados (Realtime).
+   2) Respaldo: cada 30 s, al volver a la pestaña y al recuperar la señal se pregunta igual. */
+function quiet(){var ae=document.activeElement;return !!(PEND||busy||draftHere||document.querySelector('.modal')||(ae&&(ae.tagName==='INPUT'||ae.tagName==='SELECT'))||typing())}
+var pullT=null;
+function pull(){if(quiet())return;
+  DB.loadKV(['st','fx']).then(function(kv){if(quiet())return;
+    if(kv.fx&&window.__BOOTFX&&JSON.stringify(kv.fx)!==window.__BOOTFX){var last=+(SS.get('ct2_rl')||0);if(Date.now()-last>60000){SS.set('ct2_rl',String(Date.now()));SS.set('ct2_scroll',String(window.scrollY));location.reload();return}}
+    if(kv.st)window.__applyST(kv.st)})}
+function pullSoon(){clearTimeout(pullT);pullT=setTimeout(pull,300)}
+DB.live(pullSoon);
+setInterval(pull,30000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden){pullSoon();flush()}});
+window.addEventListener('online',function(){flush();pullSoon()});
+if(PEND){applyRows(PEND.rows);keepRender();setTimeout(flush,1500)}
+setInterval(flush,8000);
 loadPublic();
 (function(){try{var q=new URLSearchParams(location.search),ref=q.get('pago');if(ref){history.replaceState(null,'',location.pathname);toast('Verificando tu pago…',3000);checkPago(ref,8)}}catch(e){}})();
 DB.sessionEmail().then(function(e){if(e&&e===String(C.adminEmail).toLowerCase()){canOrg=true;loadIns();keepRender()}});

@@ -28,9 +28,25 @@
     },
     saveKV: function (rows) {
       var now = new Date().toISOString();
-      return need().from('kv').upsert(rows.map(function (x) {
+      var req = need().from('kv').upsert(rows.map(function (x) {
         return { key: x.key, value: x.value, updated_at: now };
       })).then(unwrap);
+      /* con mala señal la petición puede quedarse colgada: a los 12 s se da por fallida
+         (si después llega, no pasa nada: guarda lo mismo) */
+      var to = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, 12000); });
+      return Promise.race([req, to]);
+    },
+
+    /* Avisa al instante cuando cambian los resultados (Supabase Realtime) */
+    live: function (onChange, onStatus) {
+      if (!sb || !sb.channel) return null;
+      try {
+        return sb.channel('kv-en-vivo')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'kv' }, function (p) {
+            onChange((p.new && p.new.key) || (p.old && p.old.key) || '');
+          })
+          .subscribe(function (s) { if (onStatus) onStatus(s); });
+      } catch (e) { return null; }
     },
 
     /* ---------- sesión del organizador ---------- */

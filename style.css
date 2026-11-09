@@ -570,3 +570,9 @@ h1{color:var(--cream)}
 /* logo nuevo: marca sin círculo en el encabezado */
 .brand .logo{border-radius:0;box-shadow:none;width:92px;height:92px}
 @media (max-width:640px){.brand .logo{width:70px;height:70px}}
+
+/* estado de envío del organizador */
+.sync{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:normal}
+.sync.ok{background:var(--ok-soft);color:var(--ok)}
+.sync.go{background:var(--court-soft);color:var(--court)}
+.sync.off{background:var(--warn-soft);color:var(--warn)}
