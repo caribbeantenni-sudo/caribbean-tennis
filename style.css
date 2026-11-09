@@ -576,3 +576,12 @@ h1{color:var(--cream)}
 .sync.ok{background:var(--ok-soft);color:var(--ok)}
 .sync.go{background:var(--court-soft);color:var(--court)}
 .sync.off{background:var(--warn-soft);color:var(--warn)}
+
+/* reglamento */
+.rgl{display:grid;gap:8px}
+.rgl .acc+.acc{margin-top:0}
+.rgb{padding:0 16px 14px;font-size:15px;line-height:1.55}
+.rgb ul,.rgb ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.rgb p{margin:0 0 8px}
+.rgb .rgf{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:var(--court-soft);padding:10px 12px;border-radius:8px}
+#reglamento .shead .btn{text-decoration:none}
